@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>Olde Raleigh Whiskey Society</title>
+<meta name="description" content="Olde Raleigh Distillery Whiskey Society member pickup tracker"/>
+<meta name="theme-color" content="#14100a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Whiskey Society"/>
+<link rel="manifest" id="pwa-manifest"/>
+<link rel="apple-touch-icon" id="pwa-icon"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0f0c07 !important;font-family:Georgia,serif;color:#e8d5b0;min-height:100vh;-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-tap-highlight-color:rgba(200,169,110,0.15)}
+/* Taps fire instantly (no double-tap-zoom wait) */
+button,a,label,select,input,textarea,.ledger-row,.member-btn{touch-action:manipulation}
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
+button{font-family:Georgia,serif;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:Georgia,serif;outline:none;box-sizing:border-box;background:#1a1208 !important;border:1px solid #2e1f0a;border-radius:6px;padding:8px 12px;color:#e8d5b0 !important;width:100%;-webkit-text-fill-color:#e8d5b0}
+select option{background:#1a1208}
+textarea{resize:vertical}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 30px #1a1208 inset !important;
+  -webkit-text-fill-color:#e8d5b0 !important;
+  caret-color:#e8d5b0;
+}
+input[type=date]{color-scheme:dark;background:#1a1208 !important;color:#e8d5b0 !important}
+select{background:#1a1208 !important;color:#e8d5b0 !important}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0f0c07}
+::-webkit-scrollbar-thumb{background:#3a2a10;border-radius:3px}
+
+/* Overlay & Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;overscroll-behavior:contain}
+.modal{background:#1a1208;border:1px solid #3a2a10;border-radius:16px;padding:28px 26px;width:100%;max-width:440px;max-height:90vh;max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-shadow:0 24px 64px rgba(0,0,0,0.7)}
+
+/* Tabs */
+.tab{padding:8px 16px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;border-radius:6px;cursor:pointer;border:1px solid transparent;color:#4a3820;background:transparent;margin:0 4px 4px 0;transition:all 0.15s}
+@media(hover:hover){.tab:hover{color:#9a7840;border-color:#2e1f0a}}
+.tab.active{border-color:rgba(200,169,110,0.4);color:#c8a96e;background:rgba(200,169,110,0.1)}
+
+/* Cards & Rows */
+.row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,0.02);border:1px solid #1a1208;border-radius:8px;margin-bottom:5px;font-size:14px}
+.stat{background:rgba(200,169,110,0.05);border:1px solid #1a1208;border-radius:10px;padding:14px 12px;text-align:center}
+.stat .val{font-size:30px;font-weight:bold;margin-bottom:3px;letter-spacing:-0.5px}
+.stat .lbl{font-size:11px;color:#4a3820;letter-spacing:1.5px;text-transform:uppercase}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:20px}
+.section-title{font-size:11px;letter-spacing:2.5px;color:#6a5030;text-transform:uppercase;margin-bottom:12px}
+.badge{font-size:11px;padding:2px 7px;border-radius:3px;display:inline-block;margin-left:5px;letter-spacing:0.5px}
+.card{background:rgba(200,169,110,0.04);border:1px solid #1a1208;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.gold{color:#c8a96e} .green{color:#7ec8a9} .red{color:#e05c5c} .dim{color:#4a3820}
+
+/* Buttons */
+.btn-gold{background:linear-gradient(135deg,#c8a96e,#b8945a);color:#0f0c07;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:bold;cursor:pointer;border:none;font-family:Georgia,serif;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(200,169,110,0.2)}
+.btn-outline{background:transparent;color:#c8a96e;border:1px solid rgba(200,169,110,0.35);border-radius:8px;padding:10px 18px;font-size:13px;cursor:pointer;font-family:Georgia,serif}
+.btn-red{background:transparent;color:#e05c5c;border:1px solid rgba(224,92,92,0.3);border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:Georgia,serif}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:5px;cursor:pointer;font-family:Georgia,serif}
+.pickup-btn{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:8px;cursor:pointer;margin-bottom:6px;font-family:Georgia,serif;font-size:15px}
+.success-msg{background:rgba(126,200,169,0.1);border:1px solid rgba(126,200,169,0.25);border-radius:10px;padding:13px 20px;text-align:center;color:#7ec8a9;font-size:14px;margin-bottom:16px}
+
+/* Admin grouped sections */
+.admin-group{background:rgba(200,169,110,0.025);border:1px solid #1a1208;border-radius:14px;padding:20px 22px;margin-bottom:18px}
+.admin-group-title{font-size:11px;letter-spacing:2.5px;color:#6a5030;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.admin-group-title::after{content:"";flex:1;height:1px;background:#1a1208}
+
+/* Ledger */
+.ledger-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;padding:12px 14px;border-radius:8px;margin-bottom:4px;border:1px solid transparent}
+.ledger-row.picked{background:rgba(126,200,169,0.06);border-color:rgba(126,200,169,0.1)}
+.ledger-row.pending{background:rgba(255,255,255,0.015);border-color:#141008}
+.ledger-pill{font-size:12px;padding:4px 11px;border-radius:20px;font-weight:bold;letter-spacing:0.5px;white-space:nowrap}
+.ledger-pill.done{background:rgba(126,200,169,0.12);color:#7ec8a9;border:1px solid rgba(126,200,169,0.2)}
+.ledger-pill.todo{background:rgba(200,169,110,0.07);color:#8a6830;border:1px solid rgba(200,169,110,0.12)}
+
+/* Member pickup buttons */
+.member-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-radius:12px;cursor:pointer;margin-bottom:8px;font-family:Georgia,serif;font-size:17px;font-weight:bold;border:1px solid;text-align:left;transition:opacity 0.1s}
+.member-btn:active{opacity:0.8}
+.member-btn.mb-done{background:rgba(126,200,169,0.08);border-color:rgba(126,200,169,0.2);color:#7ec8a9}
+.member-btn.mb-todo{background:rgba(200,169,110,0.05);border-color:#1e1408;color:#f0e0b0}
+.member-status-chip{font-size:11px;padding:5px 13px;border-radius:20px;letter-spacing:0.5px;white-space:nowrap;font-weight:normal}
+.member-status-chip.done{background:rgba(126,200,169,0.12);color:#7ec8a9;border:1px solid rgba(126,200,169,0.2)}
+.member-status-chip.todo{background:rgba(200,169,110,0.08);color:#c8a96e;border:1px solid rgba(200,169,110,0.15)}
+
+/* Bottle label */
+.bottle-label{background:linear-gradient(160deg,#201608 0%,#170f09 50%,#201608 100%);border:1px solid rgba(200,169,110,0.3);border-radius:16px;padding:28px 28px 22px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden}
+.bottle-label::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(200,169,110,0.06) 0%,transparent 65%);pointer-events:none}
+.bottle-label-rule{width:36px;height:1px;background:rgba(200,169,110,0.25);margin:10px auto}
+
+/* Alpha bar */
+.alpha-bar{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:14px;justify-content:center}
+.alpha-key{padding:6px 8px;font-size:12px;border-radius:5px;min-width:30px;text-align:center;font-family:Georgia,serif;border:1px solid}
+.alpha-key.has-letter{background:rgba(200,169,110,0.07);border-color:#1e1408;color:#c8a96e;cursor:pointer}
+.alpha-key.no-letter{background:transparent;border-color:transparent;color:#1e1408;cursor:default}
+
+@media(max-width:500px){.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+/* Touch screens (iPad): 16px text in fields stops Safari zooming in on tap; bigger tap targets on small buttons */
+@media(pointer:coarse){
+  input,select,textarea{font-size:16px !important}
+  .btn-sm,.btn-outline,.btn-red,.btn-gold,.tab{min-height:40px}
+  .modal button,.admin-group button,.row button,.ledger-row button{min-height:36px;min-width:36px}
+  .alpha-key{min-height:38px;min-width:34px}
+}
+</style>
+</head>
+<body>
+<div id="app" style="background:#0f0c07;min-height:100vh;"></div>
+<script>
+// Constants
+var LOCK_MS=300000, LOW=15, MAX_EX=6;
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function getCUR(){var n=new Date();return MONTHS[n.getMonth()]+"-"+n.getFullYear();}
+var CUR=getCUR();
+var G={gold:"#c8a96e",green:"#7ec8a9",red:"#e05c5c"};
+
+// Default members
+// Member list is empty by default — add members via Admin > Members.
+var NAMES=[];
+
+function lastName(name){var p=name.trim().split(/\s+/);return p.length>1?p[p.length-1]:p[0];}
+function pad2(n){return(n<10?"0":"")+n;}
+// Local-date helpers (avoid UTC shifting "2026-10-01" into Sep 30 in Eastern time)
+function todayYMD(){var d=new Date();return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
+function parseYMD(s){var p=String(s||"").split("-");if(p.length!==3)return null;var d=new Date(+p[0],+p[1]-1,+p[2]);return isNaN(d.getTime())?null:d;}
+function quarterOf(mo){var i=MONTHS.indexOf(String(mo).split("-")[0]);return "Q"+(i<0?1:Math.floor(i/3)+1);}
+function daysSinceBackup(){var d=parseYMD(ls("or2_lastbackup",null));return d?Math.floor((new Date()-d)/86400000):999;}
+function defMembers(){
+  return NAMES.map(function(n,i){
+    return{id:i+1,name:n,status:"active",oos:false,pickups:{},extras:{},since:"",notes:""};
+  });
+}
+
+function defConfig(){
+  var yr=new Date().getFullYear();
+  var cfg={};
+  cfg["Jan-"+yr]={blend:"Toasted Madeira",bottles:28,extrasOpen:false,notes:""};
+  cfg["Feb-"+yr]={blend:"Orange Wine",bottles:18,extrasOpen:false,notes:""};
+  cfg["Mar-"+yr]={blend:"Palo Cortado",bottles:46,extrasOpen:false,notes:""};
+  cfg["Apr-"+yr]={blend:"Ruby Port",bottles:58,extrasOpen:false,notes:""};
+  cfg["May-"+yr]={blend:"Cognac",bottles:96,extrasOpen:false,notes:""};
+  return cfg;
+}
+
+// Storage
+function ls(k,fb){
+  try{var v=localStorage.getItem(k);return v?JSON.parse(v):fb;}
+  catch(e){return fb;}
+}
+function ss(k,v){
+  try{localStorage.setItem(k,JSON.stringify(v));}
+  catch(e){}
+}
+
+// App State
+var A={
+  mode:"pickup",
+  adminOn:false,
+  showReset:false,
+  confirm:null,
+  profile:null,
+  flash:"",
+  view:"dashboard",
+  mSearch:"",
+  adminSearch:"",
+  mFilter:"all",
+  hSearch:"",
+  hMonth:"all",
+  showAdd:false,
+  showBulk:false,
+  bulk:"",
+  newName:"",
+  newOOS:false,
+  newSince:"",
+  editMo:null,
+  showDC:false,
+  dcForm:{date:"",bottles:"",notes:"",quarter:quarterOf(CUR),month:CUR},
+  showBackupWarn:false,
+  adminConfirm:null,
+  backfillMo:null,
+  backfillSearch:"",
+  _newMoMonth:null,
+  _newMoYear:null,
+  ledgerMo:null,
+  members:ls("or2_members",null)||defMembers(),
+  config:ls("or2_config",null)||defConfig(),
+  dcruns:ls("or2_dcruns",[])||[]
+};
+
+var lockTimer=null;
+var flashTimer=null;
+
+// Unique member/run IDs. (The old bulk import used Date.now()+random, which collided.)
+var _lastId=0;
+function uid(){
+  var id=Math.max(Date.now(),_lastId+1);
+  while(A.members.some(function(m){return m.id===id;})||A.dcruns.some(function(r){return r.id===id;}))id++;
+  _lastId=id;return id;
+}
+// Repair members that ended up sharing an ID. Returns the names involved.
+function fixDuplicateIds(){
+  var seen={},firstName={},maxId=0,pairs=[];
+  A.members.forEach(function(m){var n=Number(m.id);if(!isNaN(n)&&n>maxId)maxId=n;});
+  A.members=A.members.map(function(m){
+    var id=Number(m.id);
+    if(isNaN(id)||seen[id]){
+      maxId=Math.max(maxId+1,Date.now());
+      if(!isNaN(id))pairs.push(firstName[id]+" & "+m.name);
+      return Object.assign({},m,{id:maxId});
+    }
+    seen[id]=true;firstName[id]=m.name;
+    return id===m.id?m:Object.assign({},m,{id:id});
+  });
+  return pairs;
+}
+(function(){
+  var pairs=fixDuplicateIds();
+  if(pairs.length){
+    saveAll();
+    var prev=ls("or2_idfix",[])||[];
+    ss("or2_idfix",prev.concat(pairs));
+  }
+})();
+
+// Save helpers
+function saveAll(){
+  ss("or2_members",A.members);
+  ss("or2_config",A.config);
+  ss("or2_dcruns",A.dcruns);
+}
+
+// Computed
+function getCfg(){return A.config[CUR]||{blend:"",bottles:0,extrasOpen:false,notes:""};}
+function getActive(){return A.members.filter(function(m){return m.status==="active";});}
+function getLocal(){return getActive().filter(function(m){return !m.oos;});}
+function getOOS(){return A.members.filter(function(m){return m.oos;});}
+function getPickedUp(mo){mo=mo||CUR;return A.members.filter(function(m){return m.pickups[mo]===true;}).length;}
+function getExtraSold(mo){mo=mo||CUR;return A.members.reduce(function(a,m){return a+(m.extras[mo]||0);},0);}
+function getDCBottles(mo){
+  var m=mo||CUR;
+  return A.dcruns.filter(function(r){return r.month===m;}).reduce(function(a,r){return a+r.bottles;},0);
+}
+function getRemaining(mo){
+  mo=mo||CUR;
+  var c=A.config[mo]||{bottles:0};
+  return Math.max(0,(c.bottles||0)-getPickedUp(mo)-getExtraSold(mo)-getDCBottles(mo));
+}
+function isLow(){return getRemaining()<=LOW&&getCfg().bottles>0;}
+// ---- Per-month member counts & extra pool ----
+function moEnd(mo){
+  var parts=mo.split("-");var mIdx=MONTHS.indexOf(parts[0]);
+  var yr=parts[1]?parseInt(parts[1]):new Date().getFullYear();
+  return new Date(yr,mIdx+1,0,23,59,59);
+}
+// Was this member part of the club in the given month? (uses join date, status, and any activity that month)
+function memberInMonth(m,mo){
+  if(m.pickups[mo]||m.extras[mo])return true;
+  if(m.status!=="active")return false;
+  if(m.since){var d=parseYMD(m.since);if(d&&d>moEnd(mo))return false;}
+  return true;
+}
+function monthMemberList(mo){return A.members.filter(function(m){return memberInMonth(m,mo);});}
+function monthCountIsSet(mo){var c=A.config[mo];return !!(c&&c.members>0);}
+// Saved count if there is one, otherwise an estimate from the current member list
+function getMonthMembers(mo){
+  mo=mo||CUR;
+  var c=A.config[mo];
+  if(c&&c.members>0)return c.members;
+  return monthMemberList(mo).length;
+}
+// Extra bottles available = bottles made - members that month - extras already sold
+function getMonthPool(mo){
+  mo=mo||CUR;
+  var c=A.config[mo]||{bottles:0};
+  return Math.max(0,(c.bottles||0)-getMonthMembers(mo)-getExtraSold(mo));
+}
+function getExtraPool(){return getMonthPool(CUR);}
+// When a new month starts, lock in the member count we last saw for the month that just ended
+function snapshotMonths(){
+  var seen=ls("or2_seen",null);
+  if(seen&&seen.mo&&seen.mo!==CUR&&A.config[seen.mo]&&!(A.config[seen.mo].members>0)&&seen.count>0){
+    A.config[seen.mo].members=seen.count;saveAll();
+  }
+  if(!seen||seen.mo!==CUR||seen.count!==getMonthMembers(CUR)){ss("or2_seen",{mo:CUR,count:getMonthMembers(CUR)});}
+}
+function confMonths(){
+  return Object.keys(A.config).filter(function(mo){
+    var mc=A.config[mo];return mc&&(mc.blend||mc.bottles>0);
+  }).sort(function(a,b){return moKey2Date(a)-moKey2Date(b);});
+}
+function moKey2Date(mo){
+  var parts=mo.split("-");
+  var mIdx=MONTHS.indexOf(parts[0]);
+  if(mIdx===-1)return new Date(0);
+  var yr=parts[1]?parseInt(parts[1]):new Date().getFullYear();
+  return new Date(yr,mIdx,1);
+}
+
+// Flash message: a toast that floats above every screen and popup.
+// It lives outside #app, so it shows in admin tabs and over popups, and clearing it doesn't redraw the page.
+function flash(msg){
+  A.flash=msg;
+  if(flashTimer)clearTimeout(flashTimer);
+  var t=document.getElementById("toast");
+  if(!t){
+    t=document.createElement("div");t.id="toast";
+    t.style.cssText="position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);z-index:1000;max-width:min(560px,calc(100vw - 32px));background:#16241d;border:1px solid rgba(126,200,169,0.45);color:#7ec8a9;border-radius:10px;padding:12px 18px;font-size:14px;font-family:Georgia,serif;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,0.6);pointer-events:none;line-height:1.5;";
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  flashTimer=setTimeout(function(){A.flash="";var x=document.getElementById("toast");if(x&&x.parentNode)x.parentNode.removeChild(x);},msg.length>80?6000:3000);
+}
+var _searchTimer=null;
+function renderDebounced(){
+  if(_searchTimer)clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(function(){render();},120);
+}
+function resetLock(){
+  if(lockTimer)clearTimeout(lockTimer);
+  lockTimer=setTimeout(function(){
+    A.adminOn=false;A.mode="pickup";A.view="dashboard";
+    // Close admin-only popups so they don't stay open over the member screen
+    A.profile=null;A.adminConfirm=null;A.showReset=false;A.showBackupWarn=false;A.editMo=null;
+    render();
+  },LOCK_MS);
+}
+
+// Actions
+function doPickup(id){
+  var m=A.members.find(function(x){return x.id===id;});
+  if(!m)return;
+  A.members=A.members.map(function(x){
+    if(x.id!==id)return x;
+    var p=Object.assign({},x.pickups);p[CUR]=true;
+    return Object.assign({},x,{pickups:p});
+  });
+  saveAll();A.confirm=null;A.mSearch="";
+  flash("Enjoy your bottle, "+m.name+"!");render();
+}
+function undoExtra(id,mo){
+  A.members=A.members.map(function(x){
+    if(x.id!==id)return x;
+    var e=Object.assign({},x.extras);
+    if((e[mo]||0)>0)e[mo]=e[mo]-1;
+    if(e[mo]===0)delete e[mo];
+    return Object.assign({},x,{extras:e});
+  });
+  saveAll();flash("Extra bottle removed.");render();
+}
+function undoPickup(id,mo){
+  A.members=A.members.map(function(x){
+    if(x.id!==id)return x;
+    var p=Object.assign({},x.pickups);delete p[mo];
+    return Object.assign({},x,{pickups:p});
+  });
+  saveAll();flash("Pickup undone.");render();
+}
+function toggleHistoryPickup(id,mo){
+  var m=A.members.find(function(x){return x.id===id;});
+  if(!m)return;
+  var already=m.pickups[mo]===true;
+  A.members=A.members.map(function(x){
+    if(x.id!==id)return x;
+    var p=Object.assign({},x.pickups);
+    if(already)delete p[mo];else p[mo]=true;
+    return Object.assign({},x,{pickups:p});
+  });
+  saveAll();
+  flash(already?"Removed "+mo+" pickup.":"Marked "+mo+" picked up.");
+  render();
+}
+// mo = month key to sell the extra from (defaults to the current month)
+function doExtra(id,force,mo){
+  mo=mo||CUR;
+  var isCurMo=(mo===CUR);
+  var m=A.members.find(function(x){return x.id===id;});
+  if(!m)return;
+  if(isCurMo&&!m.pickups[CUR]){flash("Mark "+CUR+" picked up first.");render();return;}
+  var bought=m.extras[mo]||0;
+  if(bought>=MAX_EX){flash("Extra bottle limit reached ("+MAX_EX+") for "+mo+".");render();return;}
+  // Current month: physical stock on hand. Past months: bottles made - that month's members - extras sold.
+  var rem=isCurMo?getRemaining(mo):getMonthPool(mo);
+  if(rem<=0){flash("No extra "+mo+" bottles available.");render();return;}
+  // Safety check (current month only): would this leave fewer bottles than pending pickups?
+  if(isCurMo){
+    var pending=getActive().filter(function(x){return !x.pickups[CUR];}).length;
+    if(!force&&rem-1<pending){
+      // Warn but allow override
+      A.adminConfirm={
+        title:"Low Stock Warning",
+        message:"Selling this extra would leave "+(rem-1)+" bottle"+(rem-1!==1?"s":"")+" for "+pending+" member"+(pending!==1?"s":"")+" still pending pickup. Sell anyway?",
+        ok:"Yes, Sell Extra",cancel:"Cancel",danger:true,
+        onOk:function(){doExtra(id,true,mo);}
+      };
+      A.confirm=null;render();return;
+    }
+  }
+  A.members=A.members.map(function(x){
+    if(x.id!==id)return x;
+    var e=Object.assign({},x.extras);e[mo]=(e[mo]||0)+1;
+    return Object.assign({},x,{extras:e});
+  });
+  saveAll();
+  if(isCurMo)A.confirm=null; // past-month sales keep the popup open so you can add several
+  flash(isCurMo?"Extra bottle added!":"Extra "+mo+" bottle added ("+getMonthPool(mo)+" extras left).");
+  render();
+}
+// Small − / + controls for extras on a month row (used in both history lists)
+function extraControls(m,mo){
+  var ex=m.extras[mo]||0;
+  var wrap=el("div",{style:{display:"flex",alignItems:"center",gap:"6px"},onclick:function(ev){ev.stopPropagation();}});
+  if(ex>0){
+    var minus=btn("btn-sm","−",function(){undoExtra(m.id,mo);});
+    minus.title="Remove one extra";
+    minus.style.cssText="background:transparent;color:#c8a96e;border:1px solid rgba(200,169,110,0.3);border-radius:5px;padding:3px 9px;font-size:13px;cursor:pointer;font-family:Georgia,serif;line-height:1;";
+    wrap.appendChild(minus);
+    wrap.appendChild(el("span",{style:{fontSize:"11px",color:G.gold,minWidth:"22px",textAlign:"center"}},"+"+ex));
+  }
+  var left=(mo===CUR)?getRemaining(mo):getMonthPool(mo);
+  var canAdd=ex<MAX_EX&&left>0;
+  var plus=btn("btn-sm","+ Extra",function(){doExtra(m.id,false,mo);});
+  plus.title=canAdd?(left+" "+mo+" bottle"+(left!==1?"s":"")+" left"):(ex>=MAX_EX?"Limit reached":"None left for "+mo);
+  plus.style.cssText="background:"+(canAdd?"rgba(200,169,110,0.1)":"transparent")+";color:"+(canAdd?"#c8a96e":"#3a2a10")+";border:1px solid "+(canAdd?"rgba(200,169,110,0.35)":"#1a1208")+";border-radius:5px;padding:3px 9px;font-size:11px;cursor:"+(canAdd?"pointer":"default")+";font-family:Georgia,serif;white-space:nowrap;";
+  wrap.appendChild(plus);
+  return wrap;
+}
+// toggleExtra removed - extras always available with built-in safety check
+function updCfg(mo,fields){
+  var nc=Object.assign({},A.config);
+  nc[mo]=Object.assign({},nc[mo]||{},fields);
+  A.config=nc;saveAll();render();
+}
+function updCfgSilent(mo,fields){
+  var nc=Object.assign({},A.config);
+  nc[mo]=Object.assign({},nc[mo]||{},fields);
+  A.config=nc;ss("or2_config",A.config); // only the month settings changed
+}
+function updMSilent(id,fields){A.members=A.members.map(function(m){return m.id===id?Object.assign({},m,fields):m;});ss("or2_members",A.members);}
+function resetMonth(){
+  A.members=A.members.map(function(m){
+    var p=Object.assign({},m.pickups);delete p[CUR];
+    var e=Object.assign({},m.extras);delete e[CUR];
+    return Object.assign({},m,{pickups:p,extras:e});
+  });
+  var cfg=getCfg();
+  var nc=Object.assign({},A.config);
+  nc[CUR]=Object.assign({},cfg,{extrasOpen:false});
+  A.config=nc;saveAll();A.showReset=false;flash("Month reset!");render();
+}
+function addMember(){
+  if(!A.newName.trim()){flash("Please enter a member name.");render();return;}
+  var nm=A.newName.trim().toLowerCase();
+  if(A.members.some(function(m){return m.name.trim().toLowerCase()===nm;})){flash(A.newName.trim()+" is already a member.");render();return;}
+  A.members.push({id:uid(),name:A.newName.trim(),status:"active",oos:A.newOOS,pickups:{},extras:{},since:A.newSince,notes:""});
+  A.members.sort(function(a,b){return lastName(a.name).localeCompare(lastName(b.name));});
+  saveAll();A.newName="";A.newOOS=false;A.newSince="";A.showAdd=false;render();
+}
+function removeM(id){A.members=A.members.filter(function(m){return m.id!==id;});saveAll();render();}
+function togStatus(id){A.members=A.members.map(function(m){return m.id===id?Object.assign({},m,{status:m.status==="active"?"paused":"active"}):m;});saveAll();render();}
+function togOOS(id){A.members=A.members.map(function(m){return m.id===id?Object.assign({},m,{oos:!m.oos}):m;});saveAll();render();}
+function updM(id,fields){A.members=A.members.map(function(m){return m.id===id?Object.assign({},m,fields):m;});saveAll();}
+function importBulk(){
+  var names=A.bulk.split("\n").map(function(n){return n.trim();}).filter(function(n){return n.length>0;});
+  var existingNames=A.members.map(function(m){return m.name.toLowerCase();});
+  var added=0;
+  var skipped=[];
+  names.forEach(function(n){
+    if(existingNames.indexOf(n.toLowerCase())>=0){
+      skipped.push(n);
+    }else{
+      A.members.push({id:uid(),name:n,status:"active",oos:false,pickups:{},extras:{},since:"",notes:""});
+      existingNames.push(n.toLowerCase()); // prevent in-paste duplicates too
+      added++;
+    }
+  });
+  saveAll();A.bulk="";A.showBulk=false;
+  A.members.sort(function(a,b){return lastName(a.name).localeCompare(lastName(b.name));});
+  var msg=added+" member"+(added===1?"":"s")+" added!";
+  if(skipped.length>0)msg+=" Skipped (already exist): "+skipped.join(", ");
+  flash(msg);render();
+}
+function addDC(){
+  if(!A.dcForm.date||!A.dcForm.bottles){flash("Please enter a date and bottle count.");render();return;}
+  A.dcruns.unshift({id:uid(),date:A.dcForm.date,bottles:parseInt(A.dcForm.bottles)||0,quarter:A.dcForm.quarter,month:A.dcForm.month||CUR,notes:A.dcForm.notes});
+  saveAll();A.dcForm={date:"",bottles:"",notes:"",quarter:quarterOf(CUR),month:CUR};A.showDC=false;render();
+}
+function dlCSV(rows,fn){
+  var csv=rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  safariDownload(csv,fn,"text/csv");
+}
+function safariDownload(text,filename,mime){
+  var blob=new Blob([text],{type:mime||"text/csv"});
+  var url=URL.createObjectURL(blob);
+  var ov=document.createElement("div");
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;";
+  var box=document.createElement("div");
+  box.style.cssText="background:#1a1208;border:1px solid #3a2a10;border-radius:16px;padding:32px 28px;text-align:center;max-width:340px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.7);";
+  var title=document.createElement("div");title.textContent="Download Ready";title.style.cssText="font-size:18px;color:#f0e0b0;font-weight:bold;margin-bottom:6px;font-family:Georgia,serif;";
+  var sub=document.createElement("div");sub.textContent="Tap the link below to save the file.";sub.style.cssText="font-size:13px;color:#6a5030;margin-bottom:22px;font-family:Georgia,serif;";
+  var link=document.createElement("a");link.href=url;link.download=filename;link.textContent=filename;
+  link.style.cssText="display:block;background:linear-gradient(135deg,#c8a96e,#b8945a);color:#0f0c07;border-radius:8px;padding:14px;font-size:14px;font-weight:bold;text-decoration:none;margin-bottom:14px;font-family:Georgia,serif;";
+  function closeOv(){if(ov.parentNode)ov.parentNode.removeChild(ov);}
+  link.onclick=function(){setTimeout(function(){URL.revokeObjectURL(url);closeOv();},1000);};
+  var cls=document.createElement("button");cls.textContent="Cancel";
+  cls.style.cssText="background:transparent;color:#c8a96e;border:1px solid rgba(200,169,110,0.35);border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer;font-family:Georgia,serif;";
+  cls.onclick=function(){URL.revokeObjectURL(url);closeOv();};
+  box.appendChild(title);box.appendChild(sub);box.appendChild(link);box.appendChild(cls);
+  ov.appendChild(box);
+  ov.onclick=function(ev){if(ev.target===ov){URL.revokeObjectURL(url);closeOv();}};
+  document.body.appendChild(ov);
+}
+function buildBackupCSV(){
+  var today=todayYMD();
+  var rows=[["BACKUP","2"],["DATE",today],[""],["=MEMBERS="],["ID","Name","Status","OOS","Since","Notes","Pickups","Extras"]];
+  A.members.forEach(function(m){rows.push([m.id,m.name,m.status,m.oos?"1":"0",m.since||"",m.notes||"",JSON.stringify(m.pickups),JSON.stringify(m.extras)]);});
+  rows.push([""],["=CONFIG="],["Month","Blend","Bottles","ExtrasOpen","Notes","Members"]);
+  Object.keys(A.config).forEach(function(mo){var c=A.config[mo];if(c)rows.push([mo,c.blend||"",c.bottles||0,c.extrasOpen?"1":"0",c.notes||"",c.members>0?c.members:""]);});
+  rows.push([""],["=DCRUNS="],["ID","Date","Bottles","Quarter","Month","Notes"]);
+  A.dcruns.forEach(function(r){rows.push([r.id,r.date,r.bottles,r.quarter,r.month||CUR,r.notes||""]);});
+  return rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+}
+function expBackup(){
+  var today=todayYMD();
+  var csv=buildBackupCSV();
+  ss("or2_lastbackup",today);
+  safariDownload(csv,"whiskey-backup-"+today+".csv","text/csv");
+  flash("Tap the filename to save.");
+}
+function copyBackup(){
+  var today=todayYMD();
+  var csv=buildBackupCSV();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csv).then(function(){ss("or2_lastbackup",today);flash("Backup copied to clipboard!");render();},function(){_clipboardFallback(csv,today);});
+  }else{_clipboardFallback(csv,today);}
+}
+function _clipboardFallback(text,today){
+  var ta=document.createElement("textarea");
+  ta.value=text;ta.style.cssText="position:fixed;top:-9999px;left:-9999px;opacity:0;";
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand("copy");ss("or2_lastbackup",today);flash("Backup copied to clipboard!");}
+  catch(e){flash("Copy failed — use Download instead.");}
+  document.body.removeChild(ta);render();
+}
+// Full CSV parser: handles quoted fields that contain commas, quotes and line breaks
+// (multi-line notes used to break restores).
+function parseCSV(text){
+  var rows=[],row=[],cur="",inq=false;
+  text=String(text||"").replace(/^﻿/,"");
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inq){
+      if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else inq=false;}
+      else cur+=c;
+    }else if(c==='"')inq=true;
+    else if(c===",")
+      {row.push(cur);cur="";}
+    else if(c==="\n"||c==="\r"){
+      if(c==="\r"&&text[i+1]==="\n")i++;
+      row.push(cur);rows.push(row);row=[];cur="";
+    }else cur+=c;
+  }
+  if(cur!==""||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(function(r){return !(r.length===1&&r[0].trim()==="");});
+}
+function safeJSON(s){try{var v=JSON.parse(s||"{}");return v&&typeof v==="object"?v:{};}catch(e){return {};}}
+function parseBackup(text){
+  var rows=parseCSV(text);
+  var sec=null,rm=[],rc={},rd=[],sawDC=false,date="";
+  rows.forEach(function(row){
+    var k=(row[0]||"").trim();
+    if(k==="=MEMBERS="){sec="m";return;}
+    if(k==="=CONFIG="){sec="c";return;}
+    if(k==="=DCRUNS="){sec="d";sawDC=true;return;}
+    if(k==="=HELD="){sec="h";return;} // old backups may include this; ignored on restore
+    if(k==="DATE"){date=(row[1]||"").trim();return;}
+    if(k==="BACKUP")return;
+    if(sec==="m"){
+      if(k==="ID"||!(row[1]||"").trim())return;
+      rm.push({id:parseInt(k),name:row[1].trim(),status:(row[2]||"").trim()||"active",oos:(row[3]||"").trim()==="1",since:(row[4]||"").trim(),notes:row[5]||"",pickups:safeJSON(row[6]),extras:safeJSON(row[7])});
+    }else if(sec==="c"){
+      // Keep every real month, even one with bottles but no blend name yet
+      if(k==="Month"||MONTHS.indexOf(k.split("-")[0])<0)return;
+      rc[k]={blend:(row[1]||"").trim(),bottles:parseInt(row[2])||0,extrasOpen:(row[3]||"").trim()==="1",notes:row[4]||""};
+      var mc2=parseInt(row[5]);if(mc2>0)rc[k].members=mc2;
+    }else if(sec==="d"){
+      if(k==="ID"||!(row[1]||"").trim())return;
+      rd.push({id:parseInt(k)||k,date:row[1].trim(),bottles:parseInt(row[2])||0,quarter:(row[3]||"").trim(),month:(row[4]||"").trim()||CUR,notes:row[5]||""});
+    }
+  });
+  return {members:rm,config:rc,dcruns:rd,sawDC:sawDC,date:date};
+}
+// Ask before overwriting everything with a backup
+function restoreFromText(text){
+  var b;
+  try{b=parseBackup(text);}catch(err){flash("Restore failed: "+err.message);render();return;}
+  if(!b.members.length){flash("Could not read backup — is this a valid backup CSV?");render();return;}
+  A.adminConfirm={
+    title:"Restore Backup?",
+    message:"This replaces ALL current data with the backup"+(b.date?" from "+b.date:"")+" ("+b.members.length+" members, "+Object.keys(b.config).length+" months). Current data is lost unless you backed it up.",
+    ok:"Restore",cancel:"Cancel",danger:true,
+    onOk:function(){
+      A.members=b.members;
+      A.config=Object.keys(b.config).length>0?b.config:defConfig();
+      if(b.sawDC)A.dcruns=b.dcruns;
+      var pairs=fixDuplicateIds();
+      if(pairs.length)ss("or2_idfix",pairs);
+      A.confirm=null;A.profile=null;A.backfillMo=null;A.ledgerMo=null;
+      saveAll();flash("Restored "+b.members.length+" members!");
+    }
+  };
+  render();
+}
+function restoreFile(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){restoreFromText(ev.target.result);};
+  reader.readAsText(file);e.target.value="";
+}
+
+// DOM Builder
+function el(tag,props,kids){
+  var e=document.createElement(tag);
+  if(props){
+    Object.keys(props).forEach(function(k){
+      if(k==="cls"){e.className=props[k];}
+      else if(k==="style"&&typeof props[k]==="object"){Object.assign(e.style,props[k]);}
+      else if(k==="html"){e.innerHTML=props[k];}
+      else if(k.substr(0,2)==="on"){e[k]=props[k];}
+      else{e.setAttribute(k,props[k]);}
+    });
+  }
+  if(kids){
+    (Array.isArray(kids)?kids:[kids]).forEach(function(c){
+      if(c==null||c===false||c===undefined)return;
+      if(typeof c==="string"||typeof c==="number"){e.appendChild(document.createTextNode(String(c)));}
+      else{e.appendChild(c);}
+    });
+  }
+  return e;
+}
+function t(s){return document.createTextNode(String(s));}
+function btn(cls,label,onclick){var b=el("button",{cls:cls,onclick:onclick});b.innerHTML=label;return b;}
+
+function resetModal(){
+  var ov=el("div",{cls:"overlay"});
+  var box=el("div",{cls:"modal",style:{textAlign:"center",maxWidth:"340px"}});
+  box.appendChild(el("div",{style:{fontSize:"28px",marginBottom:"10px",color:G.red}},"!"));
+  box.appendChild(el("div",{style:{fontSize:"19px",color:"#f0e0b0",fontWeight:"bold",marginBottom:"8px"}},"Reset "+CUR+"?"));
+  box.appendChild(el("div",{style:{fontSize:"13px",color:"#6a5030",marginBottom:"22px",lineHeight:"1.6"}},"Clears all pickups and extras for this month. This cannot be undone."));
+  var row=el("div",{style:{display:"flex",gap:"10px",justifyContent:"center"}});
+  row.appendChild(btn("btn-gold","Yes, Reset",resetMonth));
+  row.appendChild(btn("btn-outline","Cancel",function(){A.showReset=false;render();}));
+  box.appendChild(row);ov.appendChild(box);
+  ov.onclick=function(ev){if(ev.target===ov){A.showReset=false;render();}};
+  return ov;
+}
+
+function confirmModal(){
+  var m=A.members.find(function(x){return x.id===A.confirm;});
+  if(!m)return null;
+  var cfg=getCfg();
+  var done=m.pickups[CUR]===true;
+  var cms=confMonths();
+  var ov=el("div",{cls:"overlay"});
+  var box=el("div",{cls:"modal","data-k":"confirm-"+m.id});
+  box.appendChild(el("div",{style:{fontSize:"10px",textAlign:"center",color:"#6a5030",letterSpacing:"2px",textTransform:"uppercase",marginBottom:"4px"}},"Welcome back"));
+  box.appendChild(el("div",{style:{fontSize:"26px",color:"#f0e0b0",textAlign:"center",fontWeight:"bold",marginBottom:"18px"}},[t("Hi, "),el("span",{style:{color:G.gold}},m.name),t("!")]));
+  if(cms.length>0){
+    var hbox=el("div",{style:{background:"rgba(0,0,0,0.25)",borderRadius:"10px",padding:"12px 14px",marginBottom:"18px"}});
+    hbox.appendChild(el("div",{style:{fontSize:"9px",letterSpacing:"2px",color:"#6a5030",textTransform:"uppercase",marginBottom:"10px"}},"Bottle History"));
+    hbox.appendChild(el("div",{style:{fontSize:"10px",color:"#4a3820",marginBottom:"10px",fontStyle:"italic"}},"Tap a past month to mark pickup, or use + Extra to buy from that month's leftovers"));
+    cms.forEach(function(mo,i){
+      var p=m.pickups[mo]===true;var isCur=mo===CUR;
+      var row=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"8px",padding:"6px 4px",borderBottom:i<cms.length-1?"1px solid rgba(26,18,8,0.9)":"none",borderRadius:"5px",cursor:isCur?"default":"pointer",background:isCur?"transparent":"rgba(200,169,110,0.02)"},onclick:isCur?null:function(){toggleHistoryPickup(m.id,mo);}});
+      var left=el("div",{style:{display:"flex",alignItems:"center",gap:"10px",minWidth:"0"}});
+      left.appendChild(el("span",{style:{fontSize:"11px",color:G.gold,fontWeight:"bold",minWidth:"32px"}},mo));
+      var lt=el("div",{style:{display:"flex",flexDirection:"column"}});
+      lt.appendChild(el("span",{style:{fontSize:"12px",color:p||isCur?"#c8b880":"#3a2a10"}},(A.config[mo]&&A.config[mo].blend)||""));
+      if(!isCur)lt.appendChild(el("span",{style:{fontSize:"10px",color:"#4a3820"}},getMonthPool(mo)+" extras left"));
+      left.appendChild(lt);
+      row.appendChild(left);
+      var rt=el("div",{style:{display:"flex",alignItems:"center",gap:"10px"}});
+      if(!isCur)rt.appendChild(extraControls(m,mo));
+      rt.appendChild(el("span",{style:{fontSize:"12px",minWidth:"20px",textAlign:"right",color:isCur&&!p?"#6a5030":p?G.green:"#2a1e0a"}},isCur&&!p?"...":p?"OK":"--"));
+      row.appendChild(rt);
+      hbox.appendChild(row);
+    });
+    box.appendChild(hbox);
+  }
+  if(done){
+    box.appendChild(el("div",{style:{background:"rgba(126,200,169,0.08)",border:"1px solid rgba(126,200,169,0.2)",borderRadius:"10px",padding:"14px",color:G.green,fontSize:"15px",textAlign:"center",marginBottom:"12px"}},"Picked up "+CUR+" bottle"));
+    // Extra bottles - always available, warn if stock is tight
+    (function(){
+      var bought=m.extras[CUR]||0;
+      var rem2=getRemaining();
+      var pending2=getActive().filter(function(x){return !x.pickups[CUR];}).length;
+      var tight=rem2>0&&rem2<=pending2;
+      if(bought>=MAX_EX){
+        box.appendChild(el("div",{style:{textAlign:"center",fontSize:"12px",color:"#6a5030",marginTop:"10px",marginBottom:"4px"}},"Extra bottle limit reached ("+MAX_EX+")"));
+      }else if(rem2<=0){
+        box.appendChild(el("div",{style:{textAlign:"center",fontSize:"12px",color:G.red,marginTop:"10px",marginBottom:"4px"}},"No bottles remaining for extras"));
+      }else{
+        if(tight){
+          box.appendChild(el("div",{style:{textAlign:"center",fontSize:"12px",color:G.red,marginTop:"10px",marginBottom:"6px",background:"rgba(224,92,92,0.08)",border:"1px solid rgba(224,92,92,0.2)",borderRadius:"8px",padding:"8px 12px"}},"⚠ Only "+rem2+" bottle"+(rem2!==1?"s":"")+" left — "+pending2+" member"+(pending2!==1?"s":"")+" still pending"));
+        }
+        var exLabel="+ Buy Extra Bottle ("+(MAX_EX-bought)+" left)";
+        var exBtn=btn(tight?"btn-red":"btn-gold",exLabel,function(){doExtra(A.confirm);});
+        exBtn.style.cssText="display:block;width:100%;font-size:15px;padding:14px;margin-top:"+(tight?"4":"12")+"px;margin-bottom:8px;background:"+(tight?"linear-gradient(135deg,#e05c5c,#c04040)":"linear-gradient(135deg,#c8a96e,#b8945a)")+";color:#0f0c07;border-radius:10px;font-weight:bold;cursor:pointer;border:none;font-family:Georgia,serif;box-shadow:0 4px 16px "+(tight?"rgba(224,92,92,0.25)":"rgba(200,169,110,0.2)")+";";
+        box.appendChild(exBtn);
+      }
+    })();
+    var db=btn("btn-outline","Done",function(){A.confirm=null;render();});
+    db.style.cssText="display:block;margin:12px auto 0;padding:10px 32px;";box.appendChild(db);
+  }else{
+    box.appendChild(el("div",{style:{color:"#6a5030",fontSize:"11px",textAlign:"center",marginBottom:"4px",letterSpacing:"1.5px",textTransform:"uppercase"}},"Your bottle this month"));
+    box.appendChild(el("div",{style:{color:G.gold,fontSize:"24px",fontWeight:"bold",textAlign:"center",marginBottom:"22px"}},""+cfg.blend));
+    var yb=btn("btn-gold","Yes, that is me!",function(){doPickup(A.confirm);});
+    yb.style.cssText="width:100%;font-size:16px;padding:16px;margin-bottom:10px;background:linear-gradient(135deg,#c8a96e,#b8945a);color:#0f0c07;border-radius:10px;font-weight:bold;cursor:pointer;border:none;font-family:Georgia,serif;box-shadow:0 4px 16px rgba(200,169,110,0.25);";
+    box.appendChild(yb);
+    var gb=btn("btn-outline","Not me - go back",function(){A.confirm=null;render();});
+    gb.style.width="100%";box.appendChild(gb);
+  }
+  ov.appendChild(box);
+  ov.onclick=function(ev){if(ev.target===ov){A.confirm=null;render();}};
+  return ov;
+}
+
+function profileModal(){
+  var m=A.members.find(function(x){return x.id===A.profile;});
+  if(!m)return null;
+  var cms=confMonths();
+  var tp=cms.filter(function(mo){return m.pickups[mo];}).length;
+  var te=cms.reduce(function(a,mo){return a+(m.extras[mo]||0);},0);
+  var ov=el("div",{cls:"overlay"});
+  var box=el("div",{cls:"modal","data-k":"profile-"+m.id});
+  var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"18px"}});
+  var info=el("div");
+  info.appendChild(el("div",{style:{fontSize:"22px",color:"#f0e0b0",fontWeight:"bold",marginBottom:"3px"}},m.name));
+  info.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820"}},(m.since?"Since "+m.since+" | ":"")+(m.oos?"OOS | ":"")+m.status));
+  hdr.appendChild(info);
+  var xb=btn("","X",function(){A.profile=null;render();});
+  xb.style.cssText="background:none;border:none;color:#4a3820;font-size:18px;cursor:pointer;padding:4px;font-family:Georgia,serif;";
+  hdr.appendChild(xb);box.appendChild(hdr);
+  var sg=el("div",{cls:"grid2",style:{marginBottom:"18px"}});
+  [{l:"Picked Up",v:tp,c:G.green},{l:"Extras",v:te,c:G.gold}].forEach(function(s){
+    var sc=el("div",{cls:"stat"});
+    sc.appendChild(el("div",{cls:"val",style:{color:s.c}},String(s.v)));
+    sc.appendChild(el("div",{cls:"lbl"},s.l));
+    sg.appendChild(sc);
+  });
+  box.appendChild(sg);
+  box.appendChild(el("div",{cls:"section-title"},"Bottle History"));
+  box.appendChild(el("div",{style:{fontSize:"10px",color:"#4a3820",marginTop:"-8px",marginBottom:"10px",fontStyle:"italic"}},"Tap a month to mark pickup, or use + Extra to buy from that month's leftovers"));
+  var hist=el("div",{style:{background:"rgba(0,0,0,0.2)",borderRadius:"10px",padding:"10px 14px",marginBottom:"16px"}});
+  if(cms.length===0){hist.appendChild(el("div",{style:{color:"#3a2a10",fontSize:"13px",padding:"8px 0"}},"No history yet"));}
+  else{
+    cms.forEach(function(mo,i){
+      var p=m.pickups[mo]===true;var ex=m.extras[mo]||0;
+      var row=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"8px",padding:"6px 4px",borderBottom:i<cms.length-1?"1px solid rgba(26,18,8,0.9)":"none",borderRadius:"5px",cursor:"pointer",background:"rgba(200,169,110,0.02)"},onclick:function(){toggleHistoryPickup(m.id,mo);}});
+      var left=el("div",{style:{display:"flex",gap:"10px",alignItems:"center",minWidth:"0"}});
+      left.appendChild(el("span",{style:{fontSize:"11px",color:G.gold,fontWeight:"bold",minWidth:"32px"}},mo));
+      var lt=el("div",{style:{display:"flex",flexDirection:"column"}});
+      lt.appendChild(el("span",{style:{fontSize:"12px",color:p?"#c8b880":"#3a2a10"}},(A.config[mo]&&A.config[mo].blend)||""));
+      lt.appendChild(el("span",{style:{fontSize:"10px",color:"#4a3820"}},(mo===CUR?getRemaining(mo)+" left":getMonthPool(mo)+" extras left")));
+      left.appendChild(lt);
+      row.appendChild(left);
+      var right=el("div",{style:{display:"flex",gap:"10px",alignItems:"center"}});
+      right.appendChild(extraControls(m,mo));
+      right.appendChild(el("span",{style:{fontSize:"12px",minWidth:"20px",textAlign:"right",color:p?G.green:"#2a1e0a"}},p?"OK":"--"));
+      row.appendChild(right);hist.appendChild(row);
+    });
+  }
+  box.appendChild(hist);
+  box.appendChild(el("div",{cls:"section-title"},"Member Notes"));
+  var ta=document.createElement("textarea");ta.rows=3;ta.placeholder="Notes about this member...";ta.value=m.notes||"";
+  ta.oninput=function(ev){updMSilent(m.id,{notes:ev.target.value});};
+  ta.onblur=function(ev){updM(m.id,{notes:ev.target.value});render();};
+  ta.style.marginBottom="12px";box.appendChild(ta);
+  box.appendChild(el("div",{cls:"section-title"},"Member Since"));
+  var di=document.createElement("input");di.type="date";di.style.colorScheme="dark";di.value=m.since||"";
+  di.onchange=function(ev){updM(m.id,{since:ev.target.value});render();};
+  box.appendChild(di);
+  ov.appendChild(box);
+  ov.onclick=function(ev){if(ev.target===ov){A.profile=null;render();}};
+  return ov;
+}
+
+// Header
+function renderHeader(){
+  var hd=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 24px",borderBottom:"1px solid #1a1208",background:"#0f0c07",position:"sticky",top:"0",zIndex:"50"}});
+  var left=el("div");
+  left.appendChild(el("div",{style:{fontSize:"9px",letterSpacing:"3.5px",color:"#6a5030",textTransform:"uppercase",marginBottom:"2px"}},"Olde Raleigh Distillery"));
+  left.appendChild(el("div",{style:{fontSize:"20px",color:"#f0e0b0",fontWeight:"bold",letterSpacing:"0.5px"}},"Whiskey Society"));
+  hd.appendChild(left);
+  var right=el("div",{style:{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}});
+  var pb=btn("","Member Pickup",function(){A.mode="pickup";A.mSearch="";userActivity();render();});
+  pb.style.cssText="background:"+(A.mode==="pickup"?"linear-gradient(135deg,#c8a96e,#b8945a)":"transparent")+";color:"+(A.mode==="pickup"?"#0f0c07":G.gold)+";border:1px solid "+(A.mode==="pickup"?"transparent":"rgba(200,169,110,0.3)")+";border-radius:8px;padding:9px 18px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;cursor:pointer;font-family:Georgia,serif;";
+  var ab=btn("",A.adminOn?"Admin (on)":"Admin",function(){A.adminOn=true;A.mode="admin";A.adminSearch="";resetLock();userActivity();render();});
+  ab.style.cssText="background:"+(A.mode==="admin"?"linear-gradient(135deg,#c8a96e,#b8945a)":"transparent")+";color:"+(A.mode==="admin"?"#0f0c07":G.gold)+";border:1px solid "+(A.mode==="admin"?"transparent":"rgba(200,169,110,0.3)")+";border-radius:8px;padding:9px 18px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;cursor:pointer;font-family:Georgia,serif;";
+  right.appendChild(pb);right.appendChild(ab);
+  if(A.adminOn){
+    var lb=btn("","Exit Admin",function(){
+      if(daysSinceBackup()>=7){A.showBackupWarn=true;render();}
+      else{A.adminOn=false;A.mode="pickup";A.view="dashboard";if(lockTimer)clearTimeout(lockTimer);render();}
+    });
+    lb.style.cssText="background:transparent;color:"+G.red+";border:1px solid rgba(224,92,92,0.3);border-radius:8px;padding:9px 14px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif;";
+    right.appendChild(lb);
+    right.appendChild(el("span",{style:{fontSize:"10px",color:"#3a2a10"}},"Returns to Pickup after 5 min idle"));
+  }
+  hd.appendChild(right);return hd;
+}
+
+// Pickup Screen
+function renderPickup(){
+  var cfg=getCfg();var rem=getRemaining();var pu=getPickedUp();
+  var wrap=el("div",{style:{maxWidth:"600px",margin:"0 auto",padding:"28px 20px",background:"#0f0c07",minHeight:"100vh"}});
+
+  // Bottle label card
+  var label=el("div",{cls:"bottle-label"});
+  label.appendChild(el("div",{style:{fontSize:"9px",letterSpacing:"4px",color:"#8a7040",textTransform:"uppercase",marginBottom:"6px"}},"Olde Raleigh Distillery"));
+  label.appendChild(el("div",{cls:"bottle-label-rule"}));
+  label.appendChild(el("div",{style:{fontSize:"11px",letterSpacing:"2.5px",color:"#6a5030",textTransform:"uppercase",marginTop:"10px",marginBottom:"6px"}},"Member Selection \u00b7 "+CUR));
+  label.appendChild(el("div",{style:{fontSize:"36px",color:"#f5e8c8",fontWeight:"bold",letterSpacing:"0.5px",lineHeight:"1.2",marginBottom:"4px"}},cfg.blend||"Not yet set"));
+  label.appendChild(el("div",{style:{fontSize:"12px",color:"#8a7040",fontStyle:"italic",marginBottom:"14px"}},"Single Barrel Whiskey Society Release"));
+  label.appendChild(el("div",{cls:"bottle-label-rule"}));
+  var es=getExtraSold();
+  var exPool=getExtraPool();
+  var stats=el("div",{style:{display:"flex",justifyContent:"center",gap:"28px",marginTop:"14px",flexWrap:"wrap"}});
+  [{v:pu,l:"Picked Up",c:G.green},{v:es,l:"Extras Sold",c:G.gold},{v:exPool,l:"Extra Bottles",c:G.gold},{v:rem,l:"Remaining",c:isLow()?G.red:G.gold},{v:cfg.bottles,l:"Bottles",c:"#b09860"}].forEach(function(s){
+    var sc=el("div",{style:{textAlign:"center"}});
+    sc.appendChild(el("div",{style:{fontSize:"22px",color:s.c,fontWeight:"bold",letterSpacing:"-0.5px"}},String(s.v)));
+    sc.appendChild(el("div",{style:{fontSize:"9px",color:"#4a3820",letterSpacing:"1.5px",textTransform:"uppercase",marginTop:"2px"}},s.l));
+    stats.appendChild(sc);
+  });
+  label.appendChild(stats);
+  if(isLow())label.appendChild(el("div",{style:{marginTop:"12px",fontSize:"11px",color:G.red,letterSpacing:"1px",textTransform:"uppercase"}},"Low Stock"));
+  wrap.appendChild(label);
+
+  // Search
+  var sr=el("div",{style:{position:"relative",marginBottom:"14px"}});
+  var si=document.createElement("input");si.type="text";si.placeholder="Search your name...";si.value=A.mSearch;
+  si.style.cssText="font-family:Georgia,serif;outline:none;box-sizing:border-box;background:rgba(200,169,110,0.05);border:1px solid #1a1208;border-radius:10px;padding:16px 20px;color:#e8d5b0;width:100%;font-size:17px;";
+  si.oninput=function(ev){A.mSearch=ev.target.value;A.confirm=null;renderDebounced();};
+  sr.appendChild(si);
+  if(A.mSearch){
+    var clrb=document.createElement("button");clrb.textContent="x";
+    clrb.style.cssText="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:#4a3820;font-size:18px;cursor:pointer;padding:0;font-family:Georgia,serif;";
+    clrb.onclick=function(){A.mSearch="";A.confirm=null;render();};
+    sr.appendChild(clrb);
+  }
+  wrap.appendChild(sr);
+
+  // Alpha bar
+  var alpha=el("div",{cls:"alpha-bar"});
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(function(letter){
+    var hasMatch=getActive().some(function(m){return lastName(m.name).toUpperCase().startsWith(letter);});
+    var ab2=document.createElement("button");ab2.textContent=letter;
+    ab2.className="alpha-key "+(hasMatch?"has-letter":"no-letter");
+    if(hasMatch){ab2.onclick=function(l){return function(){A.mSearch=l;render();};}(letter);}
+    alpha.appendChild(ab2);
+  });
+  wrap.appendChild(alpha);
+
+  var lm=getActive().slice().sort(function(a,b){return lastName(a.name).localeCompare(lastName(b.name));});
+  var disp=A.mSearch?lm.filter(function(m){
+    if(A.mSearch.length===1)return lastName(m.name).toUpperCase().startsWith(A.mSearch.toUpperCase());
+    return m.name.toLowerCase().indexOf(A.mSearch.toLowerCase())>=0;
+  }):lm;
+  if(A.mSearch&&disp.length===0){wrap.appendChild(el("div",{style:{textAlign:"center",color:"#4a3820",padding:"32px",fontSize:"14px",fontStyle:"italic"}},'No member found for "'+A.mSearch+'"'));}
+
+  var list=el("div");
+  disp.forEach(function(m){
+    var pu2=m.pickups[CUR]===true;
+    var ex2=m.extras[CUR]||0;
+    var rb=document.createElement("button");
+    rb.className="member-btn "+(pu2?"mb-done":"mb-todo");
+    rb.onclick=function(){A.confirm=m.id;render();};
+    // Left side: name + extras badge
+    var leftSide=document.createElement("span");
+    leftSide.style.cssText="display:flex;align-items:center;gap:10px;";
+    var nameSpan=document.createElement("span");nameSpan.textContent=m.name;leftSide.appendChild(nameSpan);
+    if(m.oos){
+      var oosBadge=document.createElement("span");
+      oosBadge.textContent="OOS";
+      oosBadge.style.cssText="font-size:10px;padding:3px 8px;border-radius:12px;font-weight:bold;background:rgba(200,169,110,0.08);color:#8a7040;border:1px solid rgba(200,169,110,0.2);white-space:nowrap;letter-spacing:0.5px;";
+      leftSide.appendChild(oosBadge);
+    }
+    if(ex2>0){
+      var exBadge=document.createElement("span");
+      exBadge.textContent="+"+ex2+" extra";
+      exBadge.style.cssText="font-size:11px;padding:3px 9px;border-radius:12px;font-weight:normal;background:rgba(200,169,110,0.15);color:#c8a96e;border:1px solid rgba(200,169,110,0.3);white-space:nowrap;";
+      leftSide.appendChild(exBadge);
+    }
+    rb.appendChild(leftSide);
+    // Right side: status chip
+    var chip=document.createElement("span");
+    chip.className="member-status-chip "+(pu2?"done":"todo");
+    chip.textContent=pu2?"Picked Up":"Tap to Pick Up";
+    rb.appendChild(chip);list.appendChild(rb);
+  });
+  wrap.appendChild(list);return wrap;
+}
+
+// Admin Dashboard
+function renderDash(){
+  var cfg=getCfg();var rem=getRemaining();var pu=getPickedUp();var es=getExtraSold();
+  var act=getActive();
+  var wrap=el("div");
+
+  // Backup banner
+  // One-time notice: members who had been sharing an ID (old bulk-import bug)
+  var idfix=ls("or2_idfix",[])||[];
+  if(idfix.length){
+    var fx=el("div",{style:{background:"rgba(224,92,92,0.06)",border:"1px solid rgba(224,92,92,0.25)",borderRadius:"10px",padding:"12px 18px",marginBottom:"16px"}});
+    fx.appendChild(el("div",{style:{color:G.red,fontWeight:"bold",marginBottom:"4px",fontSize:"13px"}},"Check these members' pickup history"));
+    fx.appendChild(el("div",{style:{fontSize:"12px",color:"#c87070",lineHeight:"1.6",marginBottom:"10px"}},"These pairs were sharing an internal ID, so a pickup or extra for one was also recorded for the other. That's now fixed, but their past records are copies of each other. Open each one and correct their history: "+idfix.join("; ")+"."));
+    var fxb=btn("btn-outline","Got it, dismiss",function(){ss("or2_idfix",[]);render();});
+    fx.appendChild(fxb);
+    wrap.appendChild(fx);
+  }
+  var dsb=daysSinceBackup();
+  if(dsb>=7){
+    var bb2=el("div",{style:{background:"rgba(200,169,110,0.07)",border:"1px solid rgba(200,169,110,0.2)",borderRadius:"10px",padding:"12px 18px",marginBottom:"16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"}});
+    bb2.appendChild(el("div",{style:{fontSize:"12px",color:G.gold,lineHeight:"1.5"}},dsb>=999?"No backup on file — download one from the backup section below.":"Last backup "+dsb+" days ago — consider a fresh backup."));
+    var bbnow=btn("btn-gold","Backup Now",expBackup);bbnow.style.flexShrink="0";bb2.appendChild(bbnow);
+    wrap.appendChild(bb2);
+  }
+  if(isLow()){
+    var lb=el("div",{style:{background:"rgba(224,92,92,0.07)",border:"1px solid rgba(224,92,92,0.25)",borderRadius:"10px",padding:"12px 18px",marginBottom:"14px",display:"flex",alignItems:"center",gap:"14px"}});
+    var lt=el("div",{style:{flex:"1"}});lt.appendChild(el("div",{style:{color:G.red,fontWeight:"bold",marginBottom:"2px"}},"Low Stock Warning"));lt.appendChild(el("div",{style:{color:"#c87070",fontSize:"12px"}},"Only "+rem+" bottle"+(rem!==1?"s":"")+" remaining."));lb.appendChild(lt);
+
+    wrap.appendChild(lb);
+  }
+  // Stats group
+  var statsGroup=el("div",{cls:"admin-group"});
+  statsGroup.appendChild(el("div",{cls:"admin-group-title"},"This Month \u00b7 "+CUR+(cfg.blend?" \u2014 "+cfg.blend:"")));
+  var dc=getDCBottles();
+  var exPool2=getExtraPool();
+  var sg=el("div",{cls:"grid4",style:{marginBottom:"0"}});
+  [{l:"Active Members",v:act.length,c:G.gold},{l:"Picked Up",v:pu,c:G.green},{l:"Extras Sold",v:es,c:G.gold},{l:"Extra Bottles",v:exPool2,c:G.gold},{l:"DC Bottles",v:dc,c:"#7a6830"},{l:"Remaining",v:rem,c:isLow()?G.red:G.green}].forEach(function(s){
+    var sc=el("div",{cls:"stat",style:{borderTop:"2px solid "+s.c}});
+    sc.appendChild(el("div",{cls:"val",style:{color:s.c}},String(s.v)));
+    sc.appendChild(el("div",{cls:"lbl"},s.l));
+    sg.appendChild(sc);
+  });
+  statsGroup.appendChild(sg);wrap.appendChild(statsGroup);
+
+  // Bottle setup group
+  var setupGroup=el("div",{cls:"admin-group"});
+  setupGroup.appendChild(el("div",{cls:"admin-group-title"},"Bottle Setup"));
+  var brow=el("div",{style:{display:"flex",gap:"12px",flexWrap:"wrap",alignItems:"flex-end",marginBottom:"14px"}});
+  var bld=el("div",{style:{flex:"1",minWidth:"140px"}});
+  bld.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},"Blend Name"));
+  var bi=document.createElement("input");bi.type="text";bi.placeholder="Blend name...";bi.value=cfg.blend||"";
+  bi.style.cssText="font-family:Georgia,serif;outline:none;background:rgba(200,169,110,0.05);border:1px solid #1a1208;border-radius:8px;padding:10px 12px;color:#e8d5b0;width:100%;font-size:14px;";
+  bi.oninput=function(ev){updCfgSilent(CUR,{blend:ev.target.value});};bi.onblur=function(ev){updCfg(CUR,{blend:ev.target.value});};bld.appendChild(bi);brow.appendChild(bld);
+  var bnd=el("div",{style:{width:"130px"}});
+  bnd.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},"Bottles Made"));
+  var bni=document.createElement("input");bni.type="number";bni.placeholder="e.g. 96";bni.value=cfg.bottles||"";
+  bni.style.cssText="font-family:Georgia,serif;outline:none;background:rgba(200,169,110,0.05);border:1px solid #1a1208;border-radius:8px;padding:10px 12px;color:#e8d5b0;width:100%;font-size:14px;";
+  bni.oninput=function(ev){updCfgSilent(CUR,{bottles:parseInt(ev.target.value)||0});};bni.onblur=function(ev){updCfg(CUR,{bottles:parseInt(ev.target.value)||0});};bnd.appendChild(bni);brow.appendChild(bnd);
+  var exd=el("div");
+  exd.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},"Extra Sales"));
+  var pendingCt=getActive().filter(function(x){return !x.pickups[CUR];}).length;
+  var remCt=getRemaining();
+  var safeToSell=remCt>pendingCt;
+  var exStatus=el("div",{style:{background:safeToSell?"rgba(126,200,169,0.06)":"rgba(224,92,92,0.06)",border:"1px solid "+(safeToSell?"rgba(126,200,169,0.2)":"rgba(224,92,92,0.2)"),borderRadius:"8px",padding:"10px 14px",fontSize:"12px",minWidth:"130px"}});
+  exStatus.appendChild(el("div",{style:{color:safeToSell?G.green:G.red,fontWeight:"bold",marginBottom:"2px"}},safeToSell?"Safe to sell":"⚠ Low stock"));
+  exStatus.appendChild(el("div",{style:{color:"#6a5030",fontSize:"11px"}},remCt+" left, "+pendingCt+" pending"));
+  exd.appendChild(exStatus);brow.appendChild(exd);
+  setupGroup.appendChild(brow);
+  setupGroup.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},"Monthly Notes"));
+  var nta=document.createElement("textarea");nta.rows=2;nta.placeholder="Notes for this month...";nta.value=cfg.notes||"";nta.style.fontSize="13px";nta.oninput=function(ev){updCfgSilent(CUR,{notes:ev.target.value});};nta.onblur=function(ev){updCfg(CUR,{notes:ev.target.value});};setupGroup.appendChild(nta);
+  wrap.appendChild(setupGroup);
+
+  // Actions group
+  var actGroup=el("div",{cls:"admin-group"});
+  actGroup.appendChild(el("div",{cls:"admin-group-title"},"Month Actions"));
+  var actRow=el("div",{style:{display:"flex",gap:"10px",flexWrap:"wrap"}});
+  var holdCard=el("div",{style:{flex:"1",minWidth:"180px",background:"rgba(224,92,92,0.04)",border:"1px solid rgba(224,92,92,0.12)",borderRadius:"10px",padding:"14px 16px"}});
+  holdCard.appendChild(el("div",{style:{fontSize:"13px",color:G.red,fontWeight:"bold",marginBottom:"3px"}},"Reset Month"));
+  holdCard.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",marginBottom:"12px"}},"Clears all pickups and extras for "+CUR));
+  var hbtns=el("div",{style:{display:"flex",gap:"8px"}});
+  hbtns.appendChild(btn("btn-red","Reset",function(){A.showReset=true;render();}));
+  holdCard.appendChild(hbtns);actRow.appendChild(holdCard);
+  var oosCard=el("div",{style:{flex:"1",minWidth:"160px",background:"rgba(200,169,110,0.03)",border:"1px solid #1a1208",borderRadius:"10px",padding:"14px 16px"}});
+  oosCard.appendChild(el("div",{style:{fontSize:"13px",color:G.gold,fontWeight:"bold",marginBottom:"3px"}},"Out-of-State"));
+  oosCard.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",marginBottom:"12px"}},getOOS().length+" member"+(getOOS().length!==1?"s":"")+" \u2014 DC quarterly runs"));
+  oosCard.appendChild(btn("btn-outline","View DC Runs",function(){A.view="dc runs";render();}));
+  actRow.appendChild(oosCard);
+  actGroup.appendChild(actRow);wrap.appendChild(actGroup);
+
+  // Backfill Past Month group
+  var bfGroup=el("div",{cls:"admin-group"});
+  bfGroup.appendChild(el("div",{cls:"admin-group-title"},"Backfill Past Month"));
+  var pastMos=confMonths().filter(function(mo){return mo!==CUR;}).reverse();
+  if(pastMos.length===0){
+    bfGroup.appendChild(el("div",{style:{fontSize:"12px",color:"#4a3820",padding:"4px 0"}},"No past months configured yet."));
+  }else{
+    var moSel=el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"14px"}});
+    pastMos.forEach(function(mo){
+      var isActive=A.backfillMo===mo;
+      var mb=btn("",mo,function(m){return function(){A.backfillMo=A.backfillMo===m?null:m;A.backfillSearch="";render();};}(mo));
+      mb.style.cssText="padding:7px 14px;font-size:11px;border-radius:6px;font-family:Georgia,serif;cursor:pointer;border:1px solid "+(isActive?"rgba(200,169,110,0.5)":"#1e1408")+";background:"+(isActive?"rgba(200,169,110,0.12)":"transparent")+";color:"+(isActive?G.gold:"#6a5030")+";font-weight:"+(isActive?"bold":"normal")+";";
+      moSel.appendChild(mb);
+    });
+    bfGroup.appendChild(moSel);
+    if(A.backfillMo){
+      var bfCfg=A.config[A.backfillMo]||{};
+      var bfHdr=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10px",flexWrap:"wrap",gap:"8px"}});
+      bfHdr.appendChild(el("div",{style:{fontSize:"13px",color:G.gold,fontWeight:"bold"}},A.backfillMo+(bfCfg.blend?" — "+bfCfg.blend:"")));
+      var bfPicked=A.members.filter(function(m){return m.pickups[A.backfillMo]===true;}).length;
+      bfHdr.appendChild(el("div",{style:{fontSize:"11px",color:"#6a5030"}},bfPicked+" picked up"));
+      bfGroup.appendChild(bfHdr);
+      // Search
+      var bfSi=document.createElement("input");bfSi.type="text";bfSi.placeholder="Search member...";bfSi.value=A.backfillSearch;bfSi.id="bfSearch";
+      bfSi.oninput=function(ev){A.backfillSearch=ev.target.value;renderDebounced();};
+      bfSi.onchange=function(ev){A.backfillSearch=ev.target.value;};
+      bfSi.style.marginBottom="10px";bfGroup.appendChild(bfSi);
+      // Select all / clear all row
+      var bfActRow=el("div",{style:{display:"flex",gap:"8px",marginBottom:"10px"}});
+      bfActRow.appendChild(btn("btn-outline","✓ All",function(){
+        var mo=A.backfillMo;
+        A.members=A.members.map(function(m){
+          // Only active local members who were in the club that month
+          if(m.oos||m.status!=="active"||!memberInMonth(m,mo))return m;
+          var p=Object.assign({},m.pickups);p[mo]=true;
+          return Object.assign({},m,{pickups:p});
+        });saveAll();render();
+      }));
+      bfActRow.appendChild(btn("btn-red","✗ Clear All",function(){
+        var mo=A.backfillMo;
+        A.adminConfirm={title:"Clear All Pickups?",message:"Remove all pickup records for "+mo+"? This cannot be undone.",ok:"Clear All",cancel:"Cancel",danger:true,onOk:function(){
+          A.members=A.members.map(function(m){
+            var p=Object.assign({},m.pickups);delete p[mo];
+            return Object.assign({},m,{pickups:p});
+          });saveAll();render();
+        }};render();
+      }));
+      bfGroup.appendChild(bfActRow);
+      // Member list
+      var bfMo=A.backfillMo;
+      var bfMembers=A.members.filter(function(m){
+        if(!A.backfillSearch)return true;
+        return m.name.toLowerCase().indexOf(A.backfillSearch.toLowerCase())>=0;
+      }).slice().sort(function(a,b){return lastName(a.name).localeCompare(lastName(b.name));});
+      bfMembers.forEach(function(m){
+        var picked=m.pickups[bfMo]===true;
+        var bfRow=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:"8px",marginBottom:"5px",background:picked?"rgba(126,200,169,0.07)":"rgba(255,255,255,0.02)",border:"1px solid "+(picked?"rgba(126,200,169,0.2)":"#1a1208")}});
+        var nameEl=el("div",{style:{fontSize:"14px",color:picked?G.green:"#c8b880"}},m.name+(m.oos?" (OOS)":""));
+        bfRow.appendChild(nameEl);
+        var tog=btn("",picked?"✓ Picked Up":"Mark Picked Up",function(mid,mo){return function(){
+          A.members=A.members.map(function(x){
+            if(x.id!==mid)return x;
+            var p=Object.assign({},x.pickups);
+            if(p[mo])delete p[mo];else p[mo]=true;
+            return Object.assign({},x,{pickups:p});
+          });saveAll();render();
+        };}(m.id,bfMo));
+        tog.style.cssText="padding:6px 14px;font-size:11px;border-radius:6px;font-family:Georgia,serif;cursor:pointer;border:1px solid "+(picked?"rgba(126,200,169,0.3)":"rgba(200,169,110,0.2)")+";background:"+(picked?"rgba(126,200,169,0.1)":"transparent")+";color:"+(picked?G.green:G.gold)+";white-space:nowrap;font-weight:"+(picked?"bold":"normal")+";";
+        bfRow.appendChild(tog);bfGroup.appendChild(bfRow);
+      });
+    }
+  }
+  wrap.appendChild(bfGroup);
+
+  // Export & Backup group
+  var dataGroup=el("div",{cls:"admin-group"});
+  dataGroup.appendChild(el("div",{cls:"admin-group-title"},"Data Export & Backup"));
+  dataGroup.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"8px"}},"Export CSV"));
+  var eb=el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"16px"}});
+  eb.appendChild(btn("btn-outline","v "+CUR,function(){var c=A.config[CUR]||{};var rows=[["Name","Month","Blend","Picked Up","Extras","Since","OOS"]];A.members.forEach(function(m){rows.push([m.name,CUR,c.blend||"",m.pickups[CUR]?"Yes":"No",m.extras[CUR]||0,m.since||"",m.oos?"Yes":"No"]);});dlCSV(rows,"whiskey-"+CUR+".csv");}));
+  eb.appendChild(btn("btn-outline","v All Time",function(){var cms=confMonths();var rows=[["Name","Month","Blend","Picked Up","Extras","Since","OOS"]];A.members.forEach(function(m){cms.forEach(function(mo){var c=A.config[mo]||{};rows.push([m.name,mo,c.blend||"",m.pickups[mo]?"Yes":"No",m.extras[mo]||0,m.since||"",m.oos?"Yes":"No"]);});});dlCSV(rows,"whiskey-all.csv");}));
+  dataGroup.appendChild(eb);
+  dataGroup.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"8px"}},"Full Backup & Restore"));
+  var brow2=el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",alignItems:"center",marginBottom:"14px"}});
+  brow2.appendChild(btn("btn-gold","Download Full Backup",expBackup));
+  brow2.appendChild(btn("btn-outline","Copy to Clipboard",copyBackup));
+  var rl=document.createElement("label");rl.textContent="Upload Backup CSV";rl.style.cssText="background:transparent;color:"+G.green+";border:1px solid rgba(126,200,169,0.3);border-radius:8px;padding:9px 16px;font-size:11px;font-weight:bold;cursor:pointer;display:inline-block;font-family:Georgia,serif;";
+  var rfi=document.createElement("input");rfi.type="file";rfi.accept=".csv";rfi.style.display="none";rfi.onchange=restoreFile;
+  rl.appendChild(rfi);brow2.appendChild(rl);
+  brow2.appendChild(btn("btn-outline","Paste from Clipboard",function(){
+    if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(function(text){restoreFromText(text);},function(){flash("Clipboard access denied — use Upload CSV instead.");render();});}
+    else{flash("Clipboard paste not supported — use Upload CSV instead.");render();}
+  }));
+  dataGroup.appendChild(brow2);
+  wrap.appendChild(dataGroup);
+
+  // Pickup ledger
+  var ledgerGroup=el("div",{cls:"admin-group"});
+  var ledgerHdr=el("div",{style:{display:"flex",alignItems:"center",marginBottom:"16px"}});
+  ledgerHdr.appendChild(el("div",{cls:"admin-group-title",style:{marginBottom:"0",flex:"1"}},"Pickup Status \u00b7 "+CUR+(cfg.blend?" \u2014 "+cfg.blend:"")));
+  // Out-of-state members are in the pickup list, so count them here too
+  var pickCount=act.filter(function(m){return m.pickups[CUR];}).length;
+  ledgerHdr.appendChild(el("div",{style:{fontSize:"14px",color:G.green,fontWeight:"bold",marginLeft:"12px",flexShrink:"0"}},pickCount+"/"+act.length));
+  ledgerGroup.appendChild(ledgerHdr);
+  var pending=act.filter(function(m){return !m.pickups[CUR];});
+  var picked=act.filter(function(m){return m.pickups[CUR];});
+  if(pending.length>0){
+    ledgerGroup.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"8px"}},"Pending ("+pending.length+")"));
+    pending.forEach(function(m){
+      var ex=m.extras[CUR]||0;
+      var row=el("div",{cls:"ledger-row pending"});
+      var nb2=document.createElement("button");nb2.textContent=m.name+(m.oos?" (OOS)":"");
+      nb2.style.cssText="background:none;border:none;padding:0;color:#c8b880;font-size:14px;cursor:pointer;font-family:Georgia,serif;text-align:left;";
+      nb2.onclick=function(id){return function(){A.profile=id;render();};}(m.id);row.appendChild(nb2);
+      if(ex>0){
+        var exPendCell=el("div",{style:{display:"flex",alignItems:"center",gap:"4px"}});
+        exPendCell.appendChild(el("span",{style:{fontSize:"11px",color:G.gold,background:"rgba(200,169,110,0.1)",border:"1px solid rgba(200,169,110,0.2)",borderRadius:"10px",padding:"2px 8px"}},"+"+ex+" extra"));
+        var uebp=btn("btn-sm","−",function(id){return function(){undoExtra(id,CUR);};}(m.id));
+        uebp.title="Remove one extra bottle";
+        uebp.style.cssText="background:transparent;color:#c8a96e;border:1px solid rgba(200,169,110,0.3);border-radius:5px;padding:3px 8px;font-size:13px;cursor:pointer;font-family:Georgia,serif;line-height:1;";
+        exPendCell.appendChild(uebp);
+        row.appendChild(exPendCell);
+      }else{row.appendChild(el("span"));}
+      row.appendChild(el("span",{cls:"ledger-pill todo"},"Pending"));
+      ledgerGroup.appendChild(row);
+    });
+  }
+  if(picked.length>0){
+    ledgerGroup.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"8px",marginTop:pending.length>0?"16px":"0"}},"Picked Up ("+picked.length+")"));
+    picked.forEach(function(m){
+      var ex=m.extras[CUR]||0;
+      var row=el("div",{cls:"ledger-row picked"});
+      var nb2=document.createElement("button");nb2.textContent=m.name+(m.oos?" (OOS)":"");
+      nb2.style.cssText="background:none;border:none;padding:0;color:#7ec8a9;font-size:14px;cursor:pointer;font-family:Georgia,serif;text-align:left;";
+      nb2.onclick=function(id){return function(){A.profile=id;render();};}(m.id);row.appendChild(nb2);
+      var rightCell=el("div",{style:{display:"flex",gap:"8px",alignItems:"center",flexWrap:"wrap"}});
+      if(ex>0){
+        var exCell=el("div",{style:{display:"flex",alignItems:"center",gap:"4px"}});
+        exCell.appendChild(el("span",{style:{fontSize:"11px",color:G.gold,background:"rgba(200,169,110,0.1)",border:"1px solid rgba(200,169,110,0.2)",borderRadius:"10px",padding:"2px 8px"}},"+"+ex+" extra"));
+        var ueb=btn("btn-sm","−",function(id){return function(){undoExtra(id,CUR);};}(m.id));
+        ueb.title="Remove one extra bottle";
+        ueb.style.cssText="background:transparent;color:#c8a96e;border:1px solid rgba(200,169,110,0.3);border-radius:5px;padding:3px 8px;font-size:13px;cursor:pointer;font-family:Georgia,serif;line-height:1;";
+        exCell.appendChild(ueb);
+        rightCell.appendChild(exCell);
+      }
+      var ub=btn("btn-sm","Undo",function(id){return function(){undoPickup(id,CUR);};}(m.id));
+      ub.style.cssText="background:transparent;color:#4a3820;border:1px solid #1a1208;border-radius:5px;padding:5px 10px;font-size:10px;cursor:pointer;font-family:Georgia,serif;";
+      rightCell.appendChild(ub);row.appendChild(rightCell);
+      row.appendChild(el("span",{cls:"ledger-pill done"},"Done"));
+      ledgerGroup.appendChild(row);
+    });
+  }
+  wrap.appendChild(ledgerGroup);return wrap;
+}
+
+// Admin Members
+function renderMembers(){
+  var oos=getOOS();var act=getActive();
+  var wrap=el("div");
+  var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}});
+  hdr.appendChild(el("div",{style:{fontSize:"13px",color:"#6a5030"}},A.members.length+" Total | "+act.filter(function(m){return !m.oos;}).length+" Local | "+oos.length+" OOS"));
+  var hb=el("div",{style:{display:"flex",gap:"8px"}});
+  hb.appendChild(btn("btn-outline","Bulk Import",function(){A.showBulk=!A.showBulk;A.showAdd=false;render();}));
+  hb.appendChild(btn("btn-gold","+ Add One",function(){A.showAdd=!A.showAdd;A.showBulk=false;render();}));
+  hdr.appendChild(hb);wrap.appendChild(hdr);
+  var sr=el("div",{style:{display:"flex",gap:"8px",marginBottom:"12px"}});
+  var si=document.createElement("input");si.type="text";si.placeholder="Search members...";si.value=A.adminSearch;
+  si.oninput=function(ev){
+    A.adminSearch=ev.target.value;
+    userActivity();
+    if(_searchTimer)clearTimeout(_searchTimer);
+    _searchTimer=setTimeout(function(){
+      var val=A.adminSearch;render();
+      var newInput=document.querySelector('input[placeholder="Search members..."]');
+      if(newInput){newInput.focus();newInput.setSelectionRange(val.length,val.length);}
+    },120);
+  };
+  sr.appendChild(si);
+  var sf=document.createElement("select");sf.style.cssText="background:#1a1208;border:1px solid #1a1208;color:"+G.gold+";border-radius:8px;padding:8px 12px;font-family:Georgia,serif;font-size:12px;";
+  [["all","All"],["active","Local Active"],["oos","Out-of-State"],["paused","Paused"]].forEach(function(opt){
+    var o=document.createElement("option");o.value=opt[0];o.textContent=opt[1];if(opt[0]===A.mFilter)o.selected=true;sf.appendChild(o);
+  });
+  sf.onchange=function(ev){A.mFilter=ev.target.value;render();};sr.appendChild(sf);wrap.appendChild(sr);
+  if(A.showAdd){
+    var af=el("div",{cls:"card",style:{border:"1px solid rgba(200,169,110,0.25)"}});
+    var ar=el("div",{style:{display:"flex",gap:"8px",alignItems:"center",marginBottom:"10px"}});
+    var ai=document.createElement("input");ai.type="text";ai.placeholder="Full name...";ai.value=A.newName;ai.id="newMemberInput";ai.oninput=function(ev){A.newName=ev.target.value;};ai.onchange=function(ev){A.newName=ev.target.value;};ai.onkeydown=function(ev){if(ev.key==="Enter"){A.newName=ai.value;addMember();}};
+    ar.appendChild(ai);ar.appendChild(btn("btn-gold","Add",function(){A.newName=document.getElementById("newMemberInput").value;addMember();}));ar.appendChild(btn("btn-outline","Cancel",function(){A.showAdd=false;A.newName="";render();}));af.appendChild(ar);
+    var aop=el("div",{style:{display:"flex",flexDirection:"column",gap:"10px"}});
+    var acl=document.createElement("label");acl.style.cssText="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#7a6030;font-family:Georgia,serif;";
+    var acb=document.createElement("input");acb.type="checkbox";acb.checked=A.newOOS;acb.onchange=function(ev){A.newOOS=ev.target.checked;};acb.style.width="auto";
+    acl.appendChild(acb);acl.appendChild(document.createTextNode(" Out-of-state (DC quarterly)"));aop.appendChild(acl);
+    var asd=el("div",{style:{display:"flex",flexDirection:"column",gap:"4px"}});
+    asd.appendChild(el("span",{style:{fontSize:"9px",color:"#4a3820",letterSpacing:"1.5px",textTransform:"uppercase"}},"Member Since"));
+    var asi=document.createElement("input");asi.type="date";asi.style.colorScheme="dark";asi.style.width="100%";asi.value=A.newSince;asi.onchange=function(ev){A.newSince=ev.target.value;};
+    asd.appendChild(asi);aop.appendChild(asd);af.appendChild(aop);wrap.appendChild(af);
+  }
+  if(A.showBulk){
+    var bf=el("div",{cls:"card",style:{border:"1px solid rgba(200,169,110,0.25)"}});
+    bf.appendChild(el("div",{cls:"section-title"},"Bulk Import - One Name Per Line"));
+    var bta=document.createElement("textarea");bta.rows=8;bta.placeholder="John Smith\nJane Doe...";bta.value=A.bulk;bta.id="bulkImportArea";bta.style.lineHeight="1.7";bta.oninput=function(ev){A.bulk=ev.target.value;};bta.onchange=function(ev){A.bulk=ev.target.value;};bf.appendChild(bta);
+    var bbtns=el("div",{style:{display:"flex",gap:"8px",marginTop:"10px"}});
+    bbtns.appendChild(btn("btn-gold","Import Names",function(){A.bulk=document.getElementById("bulkImportArea").value;importBulk();}));bbtns.appendChild(btn("btn-outline","Cancel",function(){A.showBulk=false;A.bulk="";render();}));bf.appendChild(bbtns);wrap.appendChild(bf);
+  }
+  var filt=A.members.filter(function(m){
+    var ms=m.name.toLowerCase().indexOf(A.adminSearch.toLowerCase())>=0;
+    if(A.mFilter==="all")return ms;
+    if(A.mFilter==="active")return ms&&m.status==="active"&&!m.oos;
+    if(A.mFilter==="oos")return ms&&m.oos;
+    if(A.mFilter==="paused")return ms&&m.status==="paused";
+    return ms;
+  }).slice().sort(function(a,b){return lastName(a.name).localeCompare(lastName(b.name));});
+  filt.forEach(function(m){
+    var row=el("div",{cls:"row",style:{opacity:m.status==="paused"?"0.55":"1"}});
+    var info=el("div");
+    var nb3=document.createElement("button");nb3.textContent=m.name;nb3.style.cssText="background:none;border:none;padding:0;color:#c8b880;font-size:14px;text-decoration:underline;text-decoration-color:rgba(200,169,110,0.25);cursor:pointer;font-family:Georgia,serif;";
+    nb3.onclick=function(id){return function(){A.profile=id;render();};}(m.id);info.appendChild(nb3);
+    if(m.status==="active"){info.appendChild(el("span",{cls:"badge",style:{color:G.gold,border:"1px solid rgba(200,169,110,0.25)"}},m.status));}
+    else{info.appendChild(el("span",{cls:"badge",style:{color:"#666",border:"1px solid #333"}},m.status));}
+    if(m.oos)info.appendChild(el("span",{cls:"badge",style:{color:"#7a6030",border:"1px solid #3a2a10"}},"OOS"));
+    if(m.since)info.appendChild(el("span",{style:{marginLeft:"5px",fontSize:"10px",color:"#3a2a10"}},"since "+m.since));
+    row.appendChild(info);
+    var rb3=el("div",{style:{display:"flex",gap:"5px",flexShrink:"0"}});
+    var ob=btn("btn-sm",m.oos?"Local":"OOS",function(id){return function(){togOOS(id);};}(m.id));ob.style.cssText+="background:transparent;color:#7a6030;border:1px solid #1a1208;";rb3.appendChild(ob);
+    var stb=btn("btn-sm",m.status==="active"?"Pause":"Activate",function(id){return function(){togStatus(id);};}(m.id));stb.style.cssText+="background:transparent;color:#7a6030;border:1px solid #1a1208;";rb3.appendChild(stb);
+    var rmb=btn("btn-sm","Remove",function(id){return function(){A.adminConfirm={title:"Remove "+m.name+"?",message:"This also deletes their pickup and extra history, which changes past months' counts. To keep their history, use Pause instead. This cannot be undone.",ok:"Remove",cancel:"Cancel",danger:true,onOk:function(){removeM(id);}};render();};}(m.id));rmb.style.cssText+="background:transparent;color:"+G.red+";border:1px solid rgba(224,92,92,0.2);";rb3.appendChild(rmb);
+    row.appendChild(rb3);wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+// Admin Months
+function renderMonths(){
+  var wrap=el("div");
+  var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}});
+  hdr.appendChild(el("div",{cls:"section-title",style:{marginBottom:"0"}},"Monthly Bottle Setup"));
+  hdr.appendChild(btn("btn-gold","+ Add Month",function(){A.editMo="__new__";render();}));wrap.appendChild(hdr);
+  if(A.editMo==="__new__"){
+    if(!A._newMoMonth)A._newMoMonth=MONTHS[new Date().getMonth()];
+    if(!A._newMoYear)A._newMoYear=String(new Date().getFullYear());
+    var nf=el("div",{cls:"card",style:{border:"1px solid rgba(200,169,110,0.25)",marginBottom:"14px"}});
+    nf.appendChild(el("div",{cls:"section-title"},"Add New Month"));
+    var nr=el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",alignItems:"flex-end",marginBottom:"10px"}});
+    var msel=document.createElement("select");
+    MONTHS.forEach(function(m){var o=document.createElement("option");o.value=m;o.textContent=m;if(m===A._newMoMonth)o.selected=true;msel.appendChild(o);});
+    msel.onchange=function(ev){A._newMoMonth=ev.target.value;};msel.style.cssText="background:#1a1208;border:1px solid #1a1208;color:"+G.gold+";border-radius:8px;padding:9px 12px;font-family:Georgia,serif;font-size:13px;";
+    var yinp=document.createElement("input");yinp.type="number";yinp.value=A._newMoYear;yinp.placeholder="Year";yinp.style.cssText="width:90px;background:#1a1208;border:1px solid #1a1208;border-radius:8px;padding:9px 12px;color:#e8d5b0;font-family:Georgia,serif;font-size:13px;";
+    yinp.oninput=function(ev){A._newMoYear=ev.target.value;};
+    nr.appendChild(msel);nr.appendChild(yinp);nf.appendChild(nr);
+    var nbtns=el("div",{style:{display:"flex",gap:"8px"}});
+    nbtns.appendChild(btn("btn-gold","Add",function(){var yr=parseInt(A._newMoYear);if(!yr||yr<2020||yr>2099){flash("Please enter a valid year (2020-2099).");render();return;}var key=A._newMoMonth+"-"+yr;if(!A.config[key])A.config[key]={blend:"",bottles:0,extrasOpen:false,notes:""};saveAll();A.editMo=key;A._newMoMonth=null;A._newMoYear=null;render();}));
+    nbtns.appendChild(btn("btn-outline","Cancel",function(){A.editMo=null;A._newMoMonth=null;A._newMoYear=null;render();}));
+    nf.appendChild(nbtns);wrap.appendChild(nf);
+  }
+  var allMos=Object.keys(A.config).sort(function(a,b){return moKey2Date(a)-moKey2Date(b);});
+  var grid=el("div",{cls:"grid3"});
+  allMos.forEach(function(mo){
+    var c=A.config[mo]||{blend:"",bottles:0,notes:""};
+    var picked=A.members.filter(function(m){return m.pickups[mo];}).length;
+    var isEdit=A.editMo===mo;var isCur=mo===CUR;
+    var card=el("div",{style:{background:isCur?"rgba(200,169,110,0.07)":"rgba(200,169,110,0.025)",border:"1px solid "+(isCur?"rgba(200,169,110,0.25)":"#1a1208"),borderRadius:"10px",padding:"14px"}});
+    var ch=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}});
+    ch.appendChild(el("span",{style:{fontSize:"10px",color:G.gold,letterSpacing:"1.5px",textTransform:"uppercase"}},mo));
+    var eb2=btn("btn-sm",isEdit?"Done":"Edit",function(m){return function(){A.editMo=A.editMo===m?null:m;render();};}(mo));eb2.style.cssText+="background:transparent;color:#6a5030;border:1px solid #1a1208;";
+    ch.appendChild(eb2);card.appendChild(ch);
+    if(isEdit){
+      var bi2=document.createElement("input");bi2.type="text";bi2.placeholder="Blend...";bi2.value=c.blend||"";bi2.style.marginBottom="8px";bi2.oninput=function(mo2){return function(ev){updCfgSilent(mo2,{blend:ev.target.value});};}(mo);bi2.onblur=function(mo2){return function(ev){updCfg(mo2,{blend:ev.target.value});};}(mo);card.appendChild(bi2);
+      var bn2=document.createElement("input");bn2.type="number";bn2.placeholder="# bottles";bn2.value=c.bottles||"";bn2.style.marginBottom="8px";bn2.oninput=function(mo2){return function(ev){updCfgSilent(mo2,{bottles:parseInt(ev.target.value)||0});};}(mo);bn2.onblur=function(mo2){return function(ev){updCfg(mo2,{bottles:parseInt(ev.target.value)||0});};}(mo);card.appendChild(bn2);
+      var nt2=document.createElement("textarea");nt2.rows=2;nt2.placeholder="Notes...";nt2.value=c.notes||"";nt2.style.fontSize="12px";nt2.oninput=function(mo2){return function(ev){updCfgSilent(mo2,{notes:ev.target.value});};}(mo);nt2.onblur=function(mo2){return function(ev){updCfg(mo2,{notes:ev.target.value});};}(mo);card.appendChild(nt2);
+    }else{
+      card.appendChild(el("div",{style:{fontSize:"14px",color:c.blend?"#f0e0b0":"#3a2a10",marginBottom:"5px"}},c.blend||"Not set"));
+      if(c.bottles>0){var pl=el("div",{style:{fontSize:"12px",color:"#4a3820"}});pl.appendChild(el("span",{style:{color:G.green}},String(picked)));pl.appendChild(document.createTextNode(" / "+c.bottles+" picked up"));card.appendChild(pl);}
+      if(c.notes)card.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",fontStyle:"italic",marginTop:"4px"}},c.notes));
+    }
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);return wrap;
+}
+
+// Admin History
+function renderHistory(){
+  var cms=confMonths();var wrap=el("div");
+  var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}});
+  hdr.appendChild(el("div",{cls:"section-title",style:{marginBottom:"0"}},"Previous Member Bottles"));
+  hdr.appendChild(btn("btn-outline","v Export All CSV",function(){var rows=[["Name","Month","Blend","Picked Up","Extras","Since","OOS"]];A.members.forEach(function(m){cms.forEach(function(mo){var c=A.config[mo]||{};rows.push([m.name,mo,c.blend||"",m.pickups[mo]?"Yes":"No",m.extras[mo]||0,m.since||"",m.oos?"Yes":"No"]);});});dlCSV(rows,"whiskey-all.csv");}));
+  wrap.appendChild(hdr);
+  var sr2=el("div",{style:{display:"flex",gap:"8px",marginBottom:"14px"}});
+  var si2=document.createElement("input");si2.type="text";si2.placeholder="Search member...";si2.value=A.hSearch;si2.oninput=function(ev){A.hSearch=ev.target.value;renderDebounced();};sr2.appendChild(si2);
+  var sf2=document.createElement("select");sf2.style.cssText="background:#1a1208;border:1px solid #1a1208;color:"+G.gold+";border-radius:8px;padding:8px 12px;font-family:Georgia,serif;font-size:12px;";
+  var opts=[["all","All Months"]].concat(cms.map(function(mo){return[mo,mo+" - "+(A.config[mo]&&A.config[mo].blend||"")];}));
+  opts.forEach(function(opt){var o=document.createElement("option");o.value=opt[0];o.textContent=opt[1];if(opt[0]===A.hMonth)o.selected=true;sf2.appendChild(o);});
+  sf2.onchange=function(ev){A.hMonth=ev.target.value;render();};sr2.appendChild(sf2);wrap.appendChild(sr2);
+  var cards=el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"16px"}});
+  cms.forEach(function(mo){
+    var cnt=A.members.filter(function(m){return m.pickups[mo];}).length;var act=A.hMonth===mo;
+    var cc=el("div",{style:{background:act?"rgba(200,169,110,0.1)":"rgba(200,169,110,0.03)",border:"1px solid "+(act?"rgba(200,169,110,0.25)":"#1a1208"),borderRadius:"10px",padding:"10px 14px",cursor:"pointer",textAlign:"center",minWidth:"96px"}});
+    cc.appendChild(el("div",{style:{fontSize:"10px",color:G.gold,textTransform:"uppercase",letterSpacing:"1px",marginBottom:"3px"}},mo));
+    cc.appendChild(el("div",{style:{fontSize:"12px",color:"#c8b880",margin:"2px 0"}},(A.config[mo]&&A.config[mo].blend)||""));
+    cc.appendChild(el("div",{style:{fontSize:"11px",color:G.green}},cnt+" picked up"));
+    if(A.config[mo]&&A.config[mo].notes)cc.appendChild(el("div",{style:{fontSize:"10px",color:"#3a2a10",fontStyle:"italic",marginTop:"3px"}},A.config[mo].notes.slice(0,20)));
+    cc.onclick=function(m){return function(){A.hMonth=A.hMonth===m?"all":m;render();};}(mo);
+    cards.appendChild(cc);
+  });
+  wrap.appendChild(cards);
+  var rows=[];
+  cms.forEach(function(mo){var mc=A.config[mo]||{};A.members.forEach(function(m){if(m.pickups[mo])rows.push({month:mo,blend:mc.blend||"",name:m.name,oos:m.oos});});});
+  var filt=rows.filter(function(r){return(A.hMonth==="all"||r.month===A.hMonth)&&r.name.toLowerCase().indexOf(A.hSearch.toLowerCase())>=0;});
+  if(filt.length===0){wrap.appendChild(el("div",{style:{textAlign:"center",color:"#3a2a10",padding:"28px",fontSize:"14px"}},"No records found."));}
+  else{
+    var th=el("div",{style:{display:"grid",gridTemplateColumns:"90px 1fr 1fr 60px",padding:"8px 14px",fontSize:"9px",color:"#3a2a10",textTransform:"uppercase",letterSpacing:"1.5px",borderBottom:"1px solid #1a1208",marginBottom:"4px"}});
+    ["Month","Member","Blend","Type"].forEach(function(l){th.appendChild(el("span",null,l));});wrap.appendChild(th);
+    filt.forEach(function(r){
+      var tr=el("div",{style:{display:"grid",gridTemplateColumns:"90px 1fr 1fr 60px",background:"rgba(200,169,110,0.025)",border:"1px solid #141008",borderRadius:"8px",padding:"11px 14px",fontSize:"13px",marginBottom:"4px"}});
+      tr.appendChild(el("span",{style:{color:G.gold,fontWeight:"bold"}},r.month));
+      tr.appendChild(el("span",{style:{color:"#c8b880"}},r.name));
+      tr.appendChild(el("span",{style:{color:"#6a5030"}},r.blend));
+      tr.appendChild(el("span",{style:{color:"#3a2a10",fontSize:"11px"}},r.oos?"OOS":"Local"));
+      wrap.appendChild(tr);
+    });
+  }
+  return wrap;
+}
+
+// DC Runs
+function renderDC(){
+  var oos=getOOS();var wrap=el("div");
+  var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"18px"}});
+  var hl=el("div");hl.appendChild(el("div",{cls:"section-title",style:{marginBottom:"4px"}},"DC Quarterly Runs"));hl.appendChild(el("div",{style:{fontSize:"13px",color:"#4a3820"}},oos.length+" out-of-state | "+A.dcruns.reduce(function(a,r){return a+r.bottles;},0)+" total bottles"));hdr.appendChild(hl);
+  hdr.appendChild(btn("btn-gold","+ Log DC Run",function(){A.showDC=!A.showDC;render();}));wrap.appendChild(hdr);
+  var oc=el("div",{cls:"card"});
+  oc.appendChild(el("div",{cls:"section-title"},"Out-of-State Members ("+oos.length+")"));
+  if(oos.length===0){oc.appendChild(el("div",{style:{color:"#3a2a10",fontSize:"13px"}},"No OOS members flagged yet."));}
+  else{var og=el("div",{cls:"grid3"});oos.forEach(function(m){og.appendChild(el("div",{style:{background:"rgba(200,169,110,0.05)",border:"1px solid #1a1208",borderRadius:"8px",padding:"10px 12px",fontSize:"13px",color:"#c8b880"}},m.name));});oc.appendChild(og);}
+  wrap.appendChild(oc);
+  if(A.showDC){
+    var df=el("div",{cls:"card",style:{border:"1px solid rgba(200,169,110,0.25)"}});
+    df.appendChild(el("div",{cls:"section-title"},"Log New DC Run"));
+    var dg=el("div",{cls:"grid2",style:{marginBottom:"12px"}});
+    function dfield(lbl,inp2){var d=el("div");d.appendChild(el("div",{style:{fontSize:"9px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},lbl));d.appendChild(inp2);dg.appendChild(d);}
+    var dd=document.createElement("input");dd.type="date";dd.style.colorScheme="dark";dd.value=A.dcForm.date;dd.onchange=function(ev){A.dcForm.date=ev.target.value;};dfield("Date",dd);
+    var db2=document.createElement("input");db2.type="number";db2.placeholder="# bottles";db2.value=A.dcForm.bottles;db2.oninput=function(ev){A.dcForm.bottles=ev.target.value;};dfield("Bottles",db2);
+    var dm=document.createElement("select");
+    Object.keys(A.config).sort(function(a,b){return moKey2Date(a)-moKey2Date(b);}).forEach(function(mo){
+      var o=document.createElement("option");o.value=mo;o.textContent=mo+(A.config[mo]&&A.config[mo].blend?" - "+A.config[mo].blend:"");
+      if(mo===(A.dcForm.month||CUR))o.selected=true;dm.appendChild(o);
+    });
+    dm.onchange=function(ev){A.dcForm.month=ev.target.value;A.dcForm.quarter=quarterOf(ev.target.value);render();};dfield("Month",dm);
+    var dq=document.createElement("select");["Q1","Q2","Q3","Q4"].forEach(function(q){var o=document.createElement("option");o.value=q;o.textContent=q+" - "+{Q1:"Jan/Feb/Mar",Q2:"Apr/May/Jun",Q3:"Jul/Aug/Sep",Q4:"Oct/Nov/Dec"}[q];if(q===A.dcForm.quarter)o.selected=true;dq.appendChild(o);});dq.onchange=function(ev){A.dcForm.quarter=ev.target.value;};dfield("Quarter",dq);
+    var dn=document.createElement("input");dn.type="text";dn.placeholder="Optional notes...";dn.value=A.dcForm.notes;dn.oninput=function(ev){A.dcForm.notes=ev.target.value;};dfield("Notes",dn);
+    df.appendChild(dg);
+    var dbtns=el("div",{style:{display:"flex",gap:"8px"}});
+    dbtns.appendChild(btn("btn-gold","Save Run",addDC));dbtns.appendChild(btn("btn-outline","Cancel",function(){A.showDC=false;render();}));df.appendChild(dbtns);wrap.appendChild(df);
+  }
+  if(A.dcruns.length===0){wrap.appendChild(el("div",{style:{textAlign:"center",color:"#3a2a10",padding:"32px",fontSize:"14px"}},"No DC runs logged yet."));}
+  else{
+    A.dcruns.forEach(function(r){
+      var row=el("div",{cls:"row"});
+      var ri=el("div");
+      var rt=el("div",{style:{display:"flex",gap:"10px",alignItems:"center",marginBottom:"4px"}});
+      rt.appendChild(el("span",{style:{color:G.gold,fontWeight:"bold",fontSize:"14px"}},"DC: "+r.date));
+      rt.appendChild(el("span",{style:{fontSize:"10px",color:"#7a6030",border:"1px solid #1a1208",borderRadius:"4px",padding:"2px 7px"}},r.month||r.quarter));
+      rt.appendChild(el("span",{style:{fontSize:"13px",color:G.green,fontWeight:"bold"}},r.bottles+" bottles"));
+      ri.appendChild(rt);if(r.notes)ri.appendChild(el("div",{style:{fontSize:"12px",color:"#3a2a10"}},r.notes));row.appendChild(ri);
+      row.appendChild(btn("btn-red","Delete",function(id,lbl){return function(){
+        A.adminConfirm={title:"Delete DC Run?",message:"Delete the "+lbl+" run? Its bottles go back into that month's remaining count.",ok:"Delete",cancel:"Cancel",danger:true,onOk:function(){
+          A.dcruns=A.dcruns.filter(function(x){return x.id!==id;});saveAll();
+        }};render();
+      };}(r.id,r.date+" ("+r.bottles+" bottles)")));
+      wrap.appendChild(row);
+    });
+  }
+  return wrap;
+}
+
+// Monthly Ledger: members, pickups and extras for each month
+function renderLedger(){
+  A.ledgerSearch=A.ledgerSearch||"";A.ledgerFilter=A.ledgerFilter||"all";
+  var wrap=el("div");
+  var mos=Object.keys(A.config).filter(function(mo){var c=A.config[mo];return c&&(c.blend||c.bottles>0);}).sort(function(a,b){return moKey2Date(b)-moKey2Date(a);});
+  wrap.appendChild(el("div",{cls:"section-title"},"Monthly Ledger"));
+  wrap.appendChild(el("div",{style:{fontSize:"12px",color:"#4a3820",marginBottom:"14px",lineHeight:"1.6"}},"Members, pickups and extras for each month. Extras left = bottles made − members that month − extras sold."));
+  if(mos.length===0){wrap.appendChild(el("div",{style:{textAlign:"center",color:"#3a2a10",padding:"28px",fontSize:"14px"}},"No months set up yet. Add one in the Months tab."));return wrap;}
+  if(!A.ledgerMo||mos.indexOf(A.ledgerMo)<0)A.ledgerMo=mos.indexOf(CUR)>=0?CUR:mos[0];
+
+  // Summary table, one row per month (tap a row to open it below)
+  var cols="1.3fr .8fr .8fr .9fr .9fr .9fr";
+  var table=el("div",{cls:"admin-group",style:{padding:"14px 12px"}});
+  var th=el("div",{style:{display:"grid",gridTemplateColumns:cols,gap:"6px",padding:"2px 10px 8px",fontSize:"9px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1px",borderBottom:"1px solid #1a1208",marginBottom:"8px"}});
+  ["Month","Members","Made","Picked Up","Extras Sold","Extras Left"].forEach(function(l){th.appendChild(el("span",null,l));});
+  table.appendChild(th);
+  var anyEst=false;
+  mos.forEach(function(mo){
+    var c=A.config[mo];var mc=getMonthMembers(mo);var est=!monthCountIsSet(mo)&&mo!==CUR;if(est)anyEst=true;
+    var pool=getMonthPool(mo);var sel=A.ledgerMo===mo;
+    var row=el("div",{style:{display:"grid",gridTemplateColumns:cols,gap:"6px",alignItems:"center",padding:"10px",borderRadius:"8px",marginBottom:"4px",cursor:"pointer",fontSize:"13px",color:"#c8b880",background:sel?"rgba(200,169,110,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(sel?"rgba(200,169,110,0.35)":"#1a1208")},onclick:function(){A.ledgerMo=mo;A.ledgerSearch="";A.ledgerFilter="all";render();}});
+    var mcell=el("div");
+    mcell.appendChild(el("div",{style:{color:G.gold,fontWeight:"bold",fontSize:"13px"}},mo+(mo===CUR?" •":"")));
+    mcell.appendChild(el("div",{style:{fontSize:"10px",color:"#6a5030"}},c.blend||""));
+    row.appendChild(mcell);
+    row.appendChild(el("span",null,mc+(est?"*":"")));
+    row.appendChild(el("span",null,String(c.bottles||0)));
+    row.appendChild(el("span",{style:{color:G.green}},getPickedUp(mo)+"/"+mc));
+    row.appendChild(el("span",{style:{color:G.gold}},String(getExtraSold(mo))));
+    row.appendChild(el("span",{style:{color:pool>0?G.green:G.red,fontWeight:"bold"}},String(pool)));
+    table.appendChild(row);
+  });
+  if(anyEst)table.appendChild(el("div",{style:{fontSize:"11px",color:"#6a5030",marginTop:"8px",lineHeight:"1.5"}},"* Estimated from today's member list. Open the month and type the real member count to lock it in."));
+  wrap.appendChild(table);
+
+  // Detail for the selected month
+  var mo=A.ledgerMo;var c=A.config[mo]||{};var mc=getMonthMembers(mo);var es=getExtraSold(mo);var pool=getMonthPool(mo);
+  var det=el("div",{cls:"admin-group"});
+  det.appendChild(el("div",{cls:"admin-group-title"},mo+(c.blend?" — "+c.blend:"")));
+  var inrow=el("div",{style:{display:"flex",gap:"12px",flexWrap:"wrap",marginBottom:"14px"}});
+  var f1=el("div",{style:{flex:"1",minWidth:"150px"}});
+  f1.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},"Members that month"));
+  var mi=document.createElement("input");mi.type="number";mi.min="0";mi.placeholder=String(mc);mi.value=monthCountIsSet(mo)?c.members:"";
+  mi.oninput=function(ev){var n=parseInt(ev.target.value);updCfgSilent(mo,{members:n>0?n:null});};
+  mi.onblur=function(){render();};
+  f1.appendChild(mi);
+  f1.appendChild(el("div",{style:{fontSize:"10px",color:"#4a3820",marginTop:"5px",lineHeight:"1.4"}},monthCountIsSet(mo)?"Saved for "+mo+".":(mo===CUR?"Counting live from your member list until the month ends.":"Estimate from today's member list. Type the real number to lock it in.")));
+  inrow.appendChild(f1);
+  var f2=el("div",{style:{width:"150px"}});
+  f2.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"6px"}},"Bottles made"));
+  var bi=document.createElement("input");bi.type="number";bi.min="0";bi.placeholder="Bottles made";bi.value=c.bottles||"";
+  bi.oninput=function(ev){updCfgSilent(mo,{bottles:parseInt(ev.target.value)||0});};
+  bi.onblur=function(){render();};
+  f2.appendChild(bi);
+  inrow.appendChild(f2);
+  det.appendChild(inrow);
+  var sg=el("div",{cls:"grid4",style:{marginBottom:"8px"}});
+  [{l:"Members",v:mc,c:G.gold},{l:"Picked Up",v:getPickedUp(mo),c:G.green},{l:"Extras Sold",v:es,c:G.gold},{l:"Extras Left",v:pool,c:pool>0?G.green:G.red}].forEach(function(s){
+    var sc=el("div",{cls:"stat",style:{borderTop:"2px solid "+s.c}});
+    sc.appendChild(el("div",{cls:"val",style:{color:s.c}},String(s.v)));
+    sc.appendChild(el("div",{cls:"lbl"},s.l));
+    sg.appendChild(sc);
+  });
+  det.appendChild(sg);
+  var raw=(c.bottles||0)-mc-es;
+  det.appendChild(el("div",{style:{fontSize:"12px",color:"#6a5030",marginBottom:"18px"}},(c.bottles||0)+" made − "+mc+" members − "+es+" extras sold = "+raw+(raw<0?" (short, nothing left)":" extras left")));
+
+  // Member list for that month
+  var mlist=monthMemberList(mo);
+  var hdr=el("div",{style:{display:"flex",gap:"8px",marginBottom:"10px"}});
+  var si=document.createElement("input");si.type="text";si.placeholder="Search this month's members...";si.value=A.ledgerSearch;
+  si.oninput=function(ev){
+    A.ledgerSearch=ev.target.value;userActivity();
+    if(_searchTimer)clearTimeout(_searchTimer);
+    _searchTimer=setTimeout(function(){
+      var val=A.ledgerSearch;render();
+      var ni=document.querySelector('input[placeholder="Search this month\'s members..."]');
+      if(ni){ni.focus();ni.setSelectionRange(val.length,val.length);}
+    },120);
+  };
+  hdr.appendChild(si);
+  var sf=document.createElement("select");sf.style.cssText="background:#1a1208;border:1px solid #1a1208;color:"+G.gold+";border-radius:8px;padding:8px 12px;font-family:Georgia,serif;font-size:12px;width:auto;";
+  [["all","All"],["pending","Not picked up"],["picked","Picked up"],["extras","Bought extras"]].forEach(function(o){var op=document.createElement("option");op.value=o[0];op.textContent=o[1];if(o[0]===A.ledgerFilter)op.selected=true;sf.appendChild(op);});
+  sf.onchange=function(ev){A.ledgerFilter=ev.target.value;render();};
+  hdr.appendChild(sf);
+  det.appendChild(hdr);
+  var shown=mlist.filter(function(m){
+    if(A.ledgerSearch&&m.name.toLowerCase().indexOf(A.ledgerSearch.toLowerCase())<0)return false;
+    if(A.ledgerFilter==="pending")return !m.pickups[mo];
+    if(A.ledgerFilter==="picked")return m.pickups[mo]===true;
+    if(A.ledgerFilter==="extras")return (m.extras[mo]||0)>0;
+    return true;
+  }).sort(function(a,b){return lastName(a.name).localeCompare(lastName(b.name));});
+  det.appendChild(el("div",{style:{fontSize:"11px",color:"#4a3820",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:"8px"}},"Members ("+shown.length+")"));
+  if(mlist.length!==mc)det.appendChild(el("div",{style:{fontSize:"11px",color:"#6a5030",marginBottom:"8px",lineHeight:"1.5"}},"The member list shows "+mlist.length+" people for "+mo+", but the month count is "+mc+"."));
+  if(shown.length===0)det.appendChild(el("div",{style:{textAlign:"center",color:"#3a2a10",padding:"18px",fontSize:"13px"}},"No members match."));
+  shown.forEach(function(m){
+    var p=m.pickups[mo]===true;
+    var row=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"8px",flexWrap:"wrap",padding:"9px 12px",borderRadius:"8px",marginBottom:"4px",background:p?"rgba(126,200,169,0.06)":"rgba(255,255,255,0.02)",border:"1px solid "+(p?"rgba(126,200,169,0.15)":"#1a1208")}});
+    row.appendChild(el("span",{style:{fontSize:"14px",color:p?G.green:"#c8b880"}},m.name+(m.oos?" (OOS)":"")));
+    var rt=el("div",{style:{display:"flex",alignItems:"center",gap:"10px",flexWrap:"wrap"}});
+    rt.appendChild(extraControls(m,mo));
+    var chip=btn("",p?"✓ Picked Up":"Mark Picked Up",function(){toggleHistoryPickup(m.id,mo);});
+    chip.style.cssText="padding:6px 12px;font-size:11px;border-radius:6px;font-family:Georgia,serif;cursor:pointer;white-space:nowrap;border:1px solid "+(p?"rgba(126,200,169,0.3)":"rgba(200,169,110,0.2)")+";background:"+(p?"rgba(126,200,169,0.1)":"transparent")+";color:"+(p?G.green:G.gold)+";font-weight:"+(p?"bold":"normal")+";";
+    rt.appendChild(chip);
+    row.appendChild(rt);
+    det.appendChild(row);
+  });
+  wrap.appendChild(det);
+  return wrap;
+}
+
+// Admin wrapper
+function renderAdmin(){
+  if(!A.adminOn)return null;
+  var wrap=el("div",{style:{padding:"24px 28px",background:"#0f0c07",minHeight:"100vh"}});
+  var tabs=el("div",{style:{display:"flex",flexWrap:"wrap",marginBottom:"22px",paddingBottom:"16px",borderBottom:"1px solid #1a1208"}});
+  ["dashboard","members","months","ledger","history","dc runs"].forEach(function(v){
+    var tb=document.createElement("button");tb.textContent=v;tb.className="tab"+(A.view===v?" active":"");
+    tb.onclick=function(vv){return function(){A.view=vv;userActivity();render();};}(v);
+    tabs.appendChild(tb);
+  });
+  wrap.appendChild(tabs);
+  if(A.view==="dashboard")wrap.appendChild(renderDash());
+  else if(A.view==="members")wrap.appendChild(renderMembers());
+  else if(A.view==="months")wrap.appendChild(renderMonths());
+  else if(A.view==="ledger")wrap.appendChild(renderLedger());
+  else if(A.view==="history")wrap.appendChild(renderHistory());
+  else if(A.view==="dc runs")wrap.appendChild(renderDC());
+  return wrap;
+}
+
+// Backup warning modal
+function backupWarnModal(){
+  var ov=el("div",{cls:"overlay"});
+  var box=el("div",{cls:"modal",style:{textAlign:"center",maxWidth:"360px",borderColor:G.gold}});
+  box.appendChild(el("div",{style:{fontSize:"28px",marginBottom:"8px",color:G.gold}},"!"));
+  box.appendChild(el("div",{style:{fontSize:"17px",color:"#f0e0b0",fontWeight:"bold",marginBottom:"8px"}},"Backup Overdue"));
+  var dsb=daysSinceBackup();
+  var msg=dsb<999?"Your last backup was "+dsb+" days ago.":"You have never downloaded a backup.";
+  box.appendChild(el("div",{style:{fontSize:"13px",color:"#6a5030",marginBottom:"22px",lineHeight:"1.7"}},msg+" If this browser is cleared, all data will be lost."));
+  var doBkp=btn("btn-gold","Download Backup Now",function(){expBackup();A.showBackupWarn=false;A.adminOn=false;A.mode="pickup";A.view="dashboard";if(lockTimer)clearTimeout(lockTimer);render();});
+  doBkp.style.cssText="display:block;width:100%;margin-bottom:10px;background:linear-gradient(135deg,#c8a96e,#b8945a);color:#0f0c07;border-radius:8px;padding:14px;font-size:14px;font-weight:bold;cursor:pointer;border:none;font-family:Georgia,serif;box-shadow:0 2px 8px rgba(200,169,110,0.2);";
+  box.appendChild(doBkp);
+  var doCopy=btn("btn-outline","Copy Backup to Clipboard",function(){copyBackup();A.showBackupWarn=false;A.adminOn=false;A.mode="pickup";A.view="dashboard";if(lockTimer)clearTimeout(lockTimer);render();});
+  doCopy.style.display="block";doCopy.style.width="100%";doCopy.style.marginBottom="10px";box.appendChild(doCopy);
+  var skip=btn("btn-outline","Skip and Lock Anyway",function(){A.showBackupWarn=false;A.adminOn=false;A.mode="pickup";A.view="dashboard";if(lockTimer)clearTimeout(lockTimer);render();});
+  skip.style.display="block";skip.style.width="100%";skip.style.marginBottom="8px";box.appendChild(skip);
+  var cancel=btn("btn-outline","Cancel — Stay in Admin",function(){A.showBackupWarn=false;render();});
+  cancel.style.cssText="display:block;width:100%;background:transparent;color:#6a5030;border:1px solid #1a1208;border-radius:8px;padding:10px 18px;font-size:12px;cursor:pointer;font-family:Georgia,serif;";
+  box.appendChild(cancel);
+  ov.appendChild(box);
+  ov.onclick=function(ev){if(ev.target===ov){A.showBackupWarn=false;render();}};
+  return ov;
+}
+
+// Admin confirm modal
+function adminConfirmModal(){
+  if(!A.adminConfirm)return null;
+  var ac=A.adminConfirm;
+  var ov=el("div",{cls:"overlay"});
+  var box=el("div",{cls:"modal",style:{textAlign:"center",maxWidth:"340px",borderColor:ac.danger?"rgba(224,92,92,0.4)":"rgba(200,169,110,0.3)"}});
+  if(ac.danger)box.appendChild(el("div",{style:{fontSize:"24px",marginBottom:"8px",color:G.red}},"!"));
+  box.appendChild(el("div",{style:{fontSize:"16px",color:"#f0e0b0",fontWeight:"bold",marginBottom:"10px"}},ac.title||"Are you sure?"));
+  box.appendChild(el("div",{style:{fontSize:"13px",color:"#6a5030",marginBottom:"22px",lineHeight:"1.6"}},ac.message));
+  var row=el("div",{style:{display:"flex",gap:"10px",justifyContent:"center"}});
+  var okb=btn(ac.danger?"btn-red":"btn-gold",ac.ok||"Confirm",function(){A.adminConfirm=null;if(ac.onOk)ac.onOk();render();});
+  okb.style.minWidth="100px";
+  var cab=btn("btn-outline",ac.cancel||"Cancel",function(){A.adminConfirm=null;render();});
+  cab.style.minWidth="100px";
+  row.appendChild(okb);row.appendChild(cab);box.appendChild(row);
+  ov.appendChild(box);
+  ov.onclick=function(ev){if(ev.target===ov){A.adminConfirm=null;render();}};
+  return ov;
+}
+
+// Main render
+function showHomeScreenPrompt(){return null;}
+// userActivity() resets the auto-lock timer. Call it on real user actions only,
+// NOT from render() — otherwise flash/debounce renders reset the timer every few seconds.
+function userActivity(){if(A.adminOn)resetLock();}
+function render(){
+  CUR=getCUR();
+  // Keep dcForm.month current so DC form always defaults to current month
+  if(!A.showDC)A.dcForm.month=CUR;
+  snapshotMonths();
+  var app=document.getElementById("app");
+  // Remember which text box had the cursor so a redraw doesn't kick you out of it
+  var ae=document.activeElement,focusKey=null,selS=null,selE=null,scrollY=window.scrollY||0;
+  if(ae&&app.contains(ae)&&(ae.tagName==="INPUT"||ae.tagName==="TEXTAREA")&&(ae.placeholder||ae.id)){
+    focusKey={tag:ae.tagName,ph:ae.placeholder||"",id:ae.id||""};
+    try{selS=ae.selectionStart;selE=ae.selectionEnd;}catch(e){}
+  }
+  // Remember how far each popup was scrolled so tapping inside it doesn't jump back to the top
+  var modalScroll={};
+  var oldModals=app.querySelectorAll("[data-k]");
+  for(var mi=0;mi<oldModals.length;mi++)modalScroll[oldModals[mi].getAttribute("data-k")]=oldModals[mi].scrollTop;
+  // Build the new screen off-page, then swap it in one step (one layout pass on the iPad)
+  var frag=document.createDocumentFragment();
+  if(A.confirm!==null){var cm=confirmModal();if(cm)frag.appendChild(cm);}
+  if(A.profile!==null){var prm=profileModal();if(prm)frag.appendChild(prm);}
+  if(A.showReset){var rm=resetModal();if(rm)frag.appendChild(rm);}
+  if(A.showBackupWarn){var bwm=backupWarnModal();if(bwm)frag.appendChild(bwm);}
+  if(A.adminConfirm){var acm=adminConfirmModal();if(acm)frag.appendChild(acm);}
+  frag.appendChild(renderHeader());
+  var hsp=showHomeScreenPrompt();if(hsp)frag.appendChild(hsp);
+  if(A.mode==="pickup")frag.appendChild(renderPickup());
+  else if(A.mode==="admin"&&A.adminOn){var adm=renderAdmin();if(adm)frag.appendChild(adm);}
+  app.textContent="";
+  app.appendChild(frag);
+  var newModals=app.querySelectorAll("[data-k]");
+  for(var mj=0;mj<newModals.length;mj++){var k=newModals[mj].getAttribute("data-k");if(modalScroll[k])newModals[mj].scrollTop=modalScroll[k];}
+  if((window.scrollY||0)!==scrollY)window.scrollTo(0,scrollY);
+  if(focusKey){
+    var cands=app.getElementsByTagName(focusKey.tag),tgt=null;
+    for(var i=0;i<cands.length;i++){
+      var c=cands[i];
+      if((focusKey.id&&c.id===focusKey.id)||(!focusKey.id&&focusKey.ph&&c.placeholder===focusKey.ph)){tgt=c;break;}
+    }
+    if(tgt){
+      try{tgt.focus({preventScroll:true});}catch(e){tgt.focus();}
+      try{if(selS!==null)tgt.setSelectionRange(selS,selE);}catch(e){}
+      if(window.scrollY!==scrollY)window.scrollTo(0,scrollY);
+    }
+  }
+}
+// Any tap or keystroke in admin counts as activity, so auto-lock only fires when truly idle
+["pointerdown","keydown","input","touchstart"].forEach(function(evt){
+  document.addEventListener(evt,function(){userActivity();},true);
+});
+
+// PWA Setup
+(function(){
+  function makeIcon(size){
+    var c=document.createElement("canvas");c.width=size;c.height=size;
+    var ctx=c.getContext("2d");
+    ctx.fillStyle="#14100a";ctx.fillRect(0,0,size,size);
+    var r=size*0.12;ctx.strokeStyle="#c8a96e";ctx.lineWidth=size*0.04;
+    ctx.beginPath();ctx.moveTo(r,size*0.04);ctx.lineTo(size-r,size*0.04);
+    ctx.quadraticCurveTo(size-size*0.04,size*0.04,size-size*0.04,r);
+    ctx.lineTo(size-size*0.04,size-r);
+    ctx.quadraticCurveTo(size-size*0.04,size-size*0.04,size-r,size-size*0.04);
+    ctx.lineTo(r,size-size*0.04);
+    ctx.quadraticCurveTo(size*0.04,size-size*0.04,size*0.04,size-r);
+    ctx.lineTo(size*0.04,r);
+    ctx.quadraticCurveTo(size*0.04,size*0.04,r,size*0.04);
+    ctx.closePath();ctx.stroke();
+    var cx=size/2,top=size*0.18,bot=size*0.78,gw=size*0.32;
+    ctx.fillStyle="#c8a96e";ctx.beginPath();
+    ctx.moveTo(cx-gw,top);ctx.lineTo(cx+gw,top);
+    ctx.lineTo(cx+gw*0.35,size*0.52);ctx.lineTo(cx+gw*0.1,size*0.62);
+    ctx.lineTo(cx+gw*0.22,bot);ctx.lineTo(cx+gw*0.34,bot);
+    ctx.lineTo(cx+gw*0.34,bot+size*0.04);ctx.lineTo(cx-gw*0.34,bot+size*0.04);
+    ctx.lineTo(cx-gw*0.34,bot);ctx.lineTo(cx-gw*0.22,bot);
+    ctx.lineTo(cx-gw*0.1,size*0.62);ctx.lineTo(cx-gw*0.35,size*0.52);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle="#3a2010";ctx.beginPath();
+    ctx.moveTo(cx-gw*0.28,size*0.34);ctx.lineTo(cx+gw*0.28,size*0.34);
+    ctx.lineTo(cx+gw*0.35,size*0.52);ctx.lineTo(cx+gw*0.1,size*0.62);
+    ctx.lineTo(cx+gw*0.22,bot);ctx.lineTo(cx-gw*0.22,bot);
+    ctx.lineTo(cx-gw*0.1,size*0.62);ctx.lineTo(cx-gw*0.35,size*0.52);
+    ctx.closePath();ctx.fill();
+    return c.toDataURL("image/png");
+  }
+  var icon192=makeIcon(192);var icon512=makeIcon(512);
+  document.getElementById("pwa-icon").href=icon192;
+  var manifest={name:"Olde Raleigh Whiskey Society",short_name:"Whiskey Society",description:"Member bottle pickup tracker",start_url:"./",display:"standalone",orientation:"portrait",background_color:"#14100a",theme_color:"#14100a",icons:[{src:icon192,sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:icon512,sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+  var mblob=new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"});
+  document.getElementById("pwa-manifest").href=URL.createObjectURL(mblob);
+  // Service worker omitted — blob URL SW registration is blocked by browsers
+  // when served from https. Netlify handles caching at the CDN level.
+})();
+
+render();
+</script>
+</body>
+</html>
